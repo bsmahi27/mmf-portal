@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MMF Portal
 
-## Getting Started
+A Next.js application for the MMF portal interface.
 
-First, run the development server:
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- Node.js 20 or newer
+- npm 10 or newer
+- A terminal or command prompt
+
+## Installation
+
+1. Open a terminal in the project folder.
+2. Install the project dependencies:
+
+```bash
+npm install
+```
+
+If this is your first time setting up the project, this will install all packages required by the app.
+
+## Running the app locally
+
+### Development mode
+
+Start the local development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open the app in your browser:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app will hot-reload while you edit files.
 
-## Learn More
+### Production build
 
-To learn more about Next.js, take a look at the following resources:
+To create a production build:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Then run the production server:
 
-## Deploy on Vercel
+```bash
+npm run start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open the same URL in your browser:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- http://localhost:3000
+
+## Useful commands
+
+```bash
+npm run lint
+```
+
+This checks the codebase for linting issues.
+
+## Stopping the app
+
+In the terminal where the app is running, press:
+
+```bash
+Ctrl + C
+```
+
+## Troubleshooting
+
+- If you see a missing dependency error, run `npm install` again.
+- If the app does not start, confirm that Node.js is installed and compatible with the project version.
+- If port 3000 is already in use, Next.js will usually tell you which port it started on instead.
