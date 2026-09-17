@@ -20,7 +20,7 @@ export default function Login() {
       <div className="login-card card">
         <div className="brand" style={{ borderBottom: "none", padding: "0 0 14px" }}>
           <b style={{ color: "var(--ink)" }}>MM Factory Portal</b>
-          <span style={{ color: "var(--mut)" }}>NCE · Mid-Market Factory · MVP</span>
+          <span style={{ color: "var(--mut)" }}>NCE · Mid-Market Factory · v3.1</span>
         </div>
         <h2 className="page">Sign in</h2>
         <p className="sub">Choose your name and role to enter the portal prototype.</p>

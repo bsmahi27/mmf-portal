@@ -38,15 +38,22 @@ export type Solution = {
 
 export type Asset = {
   n: string; type: string; ver: string; cert: string; sol: string; carve: boolean;
+  bl?: string; th?: string; repo?: string; reuse?: number;
 };
 
 export type PlayTemplate = { n: string; ch: string; steps: number; sol: string; status?: string };
+export type PartnerPlay = { n: string; p: string; tier: string; bl: string; th: string; countries: string[]; status: string; vp: string; pipe: number; campaigns: number; owner: string };
 
-export type CampaignMetrics = { reached: number; outreach: number; meetings: number; pipe: number; oppsGen: number; wins: number };
+export type CampaignMetrics = {
+  reached: number; outreach: number; meetings: number; pipe: number; oppsGen: number; wins: number;
+  targets?: number; engaged?: number; booked?: number; delivered?: number; qleads?: number;
+  cxo?: number; inbound?: number; reach?: number; bookings?: number; revenue?: number;
+};
 
 export type Campaign = {
   n: string; bu: string; status: string; sol: string; engine: string; owner: string; approver: string;
   start: string; end: string; accts: number; m: CampaignMetrics; signalDriven: boolean; country?: string;
+  bl?: string; theme?: string; partner?: string; duration?: string; description?: string;
 };
 
 export type UploadedAcct = {
@@ -59,12 +66,15 @@ export type Engine = { n: string; bu: string; clients: number; rules: number; sc
 
 export type Signal = {
   bu: string; acct: string; engine: string; title: string; src: string; score: number; sev: string; status: string; sum: string; country?: string;
+  cat?: string; rel?: string; hyp?: string; agents?: string[]; action?: string;
+  sc?: { acct: number; ind: number; str: number; camp: number; pipe: number; cred: number };
 };
 
 export type Connector = { n: string; type: string; cred: string; lic: string; active: boolean; used: string };
 
 export type Agent = {
   n: string; stage: string; ic: string; type: string; status: string; ver: string; d: string; grounding: string[];
+  owner?: string; use?: string; launches?: number;
 };
 
 export type AgentUsage = {
@@ -82,6 +92,7 @@ export type KpiSet = {
   pipeline: number; revenue: number; coverage: number; reuse: number; signals: number; conv: number;
   outreach: number; meetings: number; oppsCreated: number; stageConv: number;
   pTarget: number; rTarget: number; cTarget: number;
+  clients?: number; targetAccounts?: number; activeAccounts?: number; campaigns?: number; partners?: number; assets?: number; agents?: number; qualifiedLeads?: number; tBookings?: number; tPipeline?: number; tCoverage?: number;
 };
 
-export type Scope = { bu: string; country: string };
+export type Scope = { bu: string; country: string; level?: "country" | "bu" | "sbu" };

@@ -23,7 +23,7 @@ export default function ProspectDrawer({ p }: { p: Prospect }) {
     <div>
       <div className="flex wrapf mb">
         <span className="badge b-gray">{p.id}</span>
-        <Badge cls={p.st === 5 ? "green" : p.st >= 4 ? "teal" : "gray"}>{PSTAGES[p.st]}</Badge>
+        <Badge cls={p.st === 6 ? "green" : p.st >= 5 ? "teal" : "gray"}>{PSTAGES[p.st]}</Badge>
         <span className="muted">{buName(p.bu)}{p.country ? ` · ${p.country}` : ""}</span>
       </div>
 
@@ -90,7 +90,7 @@ export default function ProspectDrawer({ p }: { p: Prospect }) {
             <td>{p.sign}</td><td><Badge cls={linkedOpp.status === "Won" ? "green" : "gray"}>{linkedOpp.status}</Badge></td>
           </tr></tbody>
         </table>
-      ) : p.st >= 4 ? (
+      ) : p.st >= 5 ? (
         <div className="flex">
           <select className="t">{eligibleOpps.map((o) => <option key={o.id} value={o.id}>{o.n}</option>)}</select>
           <button className="btn sm" disabled={!rw}>Link</button>

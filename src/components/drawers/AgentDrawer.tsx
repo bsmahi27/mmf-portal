@@ -36,6 +36,7 @@ export default function AgentDrawer({ a }: { a: Agent }) {
   return (
     <div>
       <div className="muted mb">{a.stage}</div>
+      <div className="legend mb">Owned by {a.owner} · best used for {a.use}</div>
       <div className="flex wrapf mb">
         <Badge cls={a.type === "Internal" ? "violet" : "blue"}>{a.type}</Badge>
         <Badge cls={a.status === "Published" ? "green" : "amber"}>{a.status}</Badge>
@@ -45,7 +46,7 @@ export default function AgentDrawer({ a }: { a: Agent }) {
       <div className="legend">Grounding: {a.grounding.join(" · ")} — always RLS-scoped to the invoking user.</div>
 
       <div className="grid mt" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
-        <div className="kpi"><div className="lab">Invocations</div><div className="val">{usage?.inv ?? 0}</div></div>
+        <div className="kpi"><div className="lab">Launches</div><div className="val">{a.launches ?? usage?.inv ?? 0}</div></div>
         <div className="kpi"><div className="lab">Distinct users</div><div className="val">{usage?.users ?? 0}</div></div>
         <div className="kpi"><div className="lab">Rating</div><div className="val">{usage?.rating ?? "—"}</div><div className="meta">{usage ? stars(usage.rating) : ""}</div></div>
       </div>

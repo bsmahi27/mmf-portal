@@ -13,7 +13,7 @@ import InteractionDrawer from "@/components/drawers/InteractionDrawer";
 const TABS = ["BU leader scorecard", "SBU exec roll-up", "Seller personal view", "Campaign & Radar performance", "Campaign health", "Agent adoption"];
 
 export default function Dashboard() {
-  const { scope, setScope, pview, subview, setSub } = useApp();
+  const { scope, setScope, pview, subview, setSub, go } = useApp();
   const tab = subview["dashboard"] || TABS[0];
   const setTab = (t: string) => setSub("dashboard", t);
   const k = kpiFor(scope);
@@ -23,7 +23,7 @@ export default function Dashboard() {
       <h2 className="page">{scopeLabel(scope)} — Factory performance</h2>
       <p className="sub">Shared KPI definitions · actuals against quarterly objectives · refreshed daily</p>
       <Tabs tabs={pview === "Seller" ? [TABS[2]] : TABS} active={tab} onChange={setTab} />
-      {tab === "BU leader scorecard" && <BuScorecard k={k} scope={scope} />}
+      {tab === "BU leader scorecard" && <BuScorecard k={k} scope={scope} go={go} />}
       {tab === "SBU exec roll-up" && <SbuRollup setScope={setScope} />}
       {tab === "Seller personal view" && <SellerView />}
       {tab === "Campaign & Radar performance" && <CampaignPerf />}
@@ -33,32 +33,139 @@ export default function Dashboard() {
   );
 }
 
-function BuScorecard({ k, scope }: { k: ReturnType<typeof kpiFor>; scope: { bu: string; country: string } }) {
+function BuScorecard({ k, scope, go }: { k: ReturnType<typeof kpiFor>; scope: { bu: string; country: string }; go: (id: string, sub?: string) => void }) {
   const pipelinePct = (k.pipeline / k.pTarget) * 100;
   const revenuePct = (k.revenue / k.rTarget) * 100;
   const coveragePct = (k.coverage / k.cTarget) * 100;
+  const byCountry = [
+    { name: "Germany", value: k.pipeline * 1.35 },
+    { name: "Netherlands", value: k.pipeline * 0.7 },
+    { name: "United Kingdom", value: k.pipeline * 1.1 },
+    { name: "Nordics", value: k.pipeline * 0.85 },
+  ];
+  const maxCountry = Math.max(...byCountry.map((x) => x.value));
+
   return (
     <>
-      <div className="grid" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
-        <Kpi lab="Qualified pipeline (€M)" val={`€${k.pipeline.toFixed(1)}M`} meta={`Target €${k.pTarget.toFixed(1)}M · ${pipelinePct.toFixed(0)}%`} />
-        <Kpi lab="Revenue booked (€M)" val={`€${k.revenue.toFixed(1)}M`} meta={`Target €${k.rTarget.toFixed(1)}M · ${revenuePct.toFixed(0)}%`} />
-        <Kpi lab="Coverage (%)" val={`${k.coverage.toFixed(0)}%`} meta={`Target ${k.cTarget.toFixed(0)}%`} />
-        <Kpi lab="% Industrialized (%)" val={`${k.reuse.toFixed(0)}%`} meta="Reuse of certified assets" />
-        <Kpi lab="Outreach activities" val={k.outreach} />
-        <Kpi lab="Meetings secured" val={k.meetings} />
-        <Kpi lab="Opportunities created" val={k.oppsCreated} />
-        <Kpi lab="Campaign stage conversion (%)" val={`${k.stageConv.toFixed(0)}%`} />
-        <Kpi lab="Signal → opportunity conversion (%)" val={`${k.conv.toFixed(0)}%`} />
-        <Kpi lab="Agent adoption" val="61" meta="distinct users" />
+      <div className="flex between wrapf mb" style={{ alignItems: "flex-end" }}>
+        <div>
+          <h2 className="page" style={{ marginBottom: 2 }}>Mid-Market Factory snapshot</h2>
+          <p className="sub" style={{ margin: 0 }}>Leadership view · actuals vs quarterly targets · every tile drills into its module</p>
+        </div>
+        <div className="legend">Figures illustrative · As of 15 Sep 2026</div>
       </div>
-      <div className="row mt">
-        <div className="card flex" style={{ gap: 20 }}>
-          <Ring pct={pipelinePct} color={pctColor(pipelinePct)} />
-          <Ring pct={revenuePct} color={pctColor(revenuePct)} />
-          <Ring pct={coveragePct} color={pctColor(coveragePct)} />
-          <div className="legend">Pipeline / Revenue / Coverage attainment vs quarterly target.</div>
+
+      <div className="dashgrid">
+        <div className="tile wide" style={{ gridColumn: "span 7" }} onClick={() => go("pipeline", "Prospect pipeline")}>
+          <div className="drill">Open Pipeline Explorer →</div>
+          <div className="th"><div className="ti" style={{ background: "var(--primary)" }}>👥</div><div className="tt">Clients</div></div>
+          <div className="metricrow">
+            <div><div className="big">~{k.clients ?? Math.round((k.pipeline + k.revenue) * 4)}</div><div className="lab">Total mid-market clients</div></div>
+            <div><div className="big">{k.targetAccounts ?? k.oppsCreated}</div><div className="lab">Target accounts</div></div>
+            <div><div className="big">{k.activeAccounts ?? k.meetings}</div><div className="lab">Targeted / active accounts</div></div>
+            <div><div className="big">{k.outreach}</div><div className="lab">Client meetings generated</div></div>
+          </div>
+          <div className="att"><span className="badge b-blue">Coverage {Math.round(k.coverage)}%</span> vs target {Math.round(k.cTarget)}% · {k.oppsCreated} qualified leads this quarter</div>
+        </div>
+
+        <div className="tile" style={{ gridColumn: "span 5" }} onClick={() => go("pipeline", "Master list")}>
+          <div className="drill">Open prospect pipeline →</div>
+          <div className="th"><div className="ti" style={{ background: "var(--navy2)" }}>🧭</div><div className="tt">Pipeline & Opportunity Explorer</div></div>
+          <div className="flex between">
+            <div>
+              <div className="big">€{k.pipeline.toFixed(1)}M</div>
+              <div className="lab">Bookings influenced</div>
+              <div className="mt6"><span className="muted" style={{ fontSize: 12 }}>Qualified pipeline <b>€{k.pipeline.toFixed(1)}M</b></span></div>
+            </div>
+            <Ring pct={pipelinePct} color={pctColor(pipelinePct)} />
+          </div>
+          <div className="att">Target €{k.pTarget.toFixed(1)}M bookings · €{k.pTarget.toFixed(1)}M pipeline</div>
+        </div>
+
+        <div className="tile" style={{ gridColumn: "span 4" }} onClick={() => go("campaigns", "Calendar")}>
+          <div className="drill">Open →</div>
+          <div className="th"><div className="ti" style={{ background: "var(--teal)" }}>📣</div><div className="tt">Campaigns</div></div>
+          <div className="big">{k.campaigns ?? CAMPAIGNS.filter((c) => c.status === "Active").length}</div>
+          <div className="lab"># Active campaigns</div>
+          <div className="att">{CAMPAIGNS.length} total in scope · campaign calendar & builder available</div>
+        </div>
+
+        <div className="tile" style={{ gridColumn: "span 4" }} onClick={() => go("solutions", "Partner Plays")}>
+          <div className="drill">Open →</div>
+          <div className="th"><div className="ti" style={{ background: "var(--amber)" }}>🤝</div><div className="tt">Partner Plays</div></div>
+          <div className="big">{k.partners ?? Math.max(2, CAMPAIGNS.filter((c) => c.signalDriven).length)}</div>
+          <div className="lab"># Active partner plays</div>
+          <div className="att">€{(k.pipeline * 0.32).toFixed(1)}M partner-influenced pipeline</div>
+        </div>
+
+        <div className="tile" style={{ gridColumn: "span 4" }} onClick={() => go("solutions", "Assets by Business Line")}>
+          <div className="drill">Open →</div>
+          <div className="th"><div className="ti" style={{ background: "var(--primary)" }}>💡</div><div className="tt">Solutions & Assets</div></div>
+          <div className="big">{k.assets ?? Math.max(12, Math.round(k.reuse))}</div>
+          <div className="lab"># Key assets across Business Lines</div>
+          <div className="att">{Math.round(k.reuse)}% industrialized (reuse of certified assets)</div>
+        </div>
+
+        <div className="tile" style={{ gridColumn: "span 6" }} onClick={() => go("radar", "Signal radar")}>
+          <div className="drill">Open →</div>
+          <div className="th"><div className="ti" style={{ background: "var(--primary-d)" }}>📡</div><div className="tt">Triggers Radar</div></div>
+          <div className="flex between">
+            <div><div className="big">{k.signals}</div><div className="lab"># Market triggers covered this quarter</div></div>
+            <div style={{ textAlign: "right" }}>
+              <div><span className="badge b-red">{Math.max(1, Math.round(k.signals * 0.28))} critical</span></div>
+              <div className="mt6"><span className="badge b-amber">{Math.max(2, Math.round(k.signals * 0.52))} high</span></div>
+            </div>
+          </div>
+          <div className="att">7 vertical trigger categories · {k.signals} open signals awaiting action</div>
+        </div>
+
+        <div className="tile" style={{ gridColumn: "span 6" }} onClick={() => go("agents", "Registry")}>
+          <div className="drill">Open launchpad →</div>
+          <div className="th"><div className="ti" style={{ background: "var(--pink)" }}>🤖</div><div className="tt">Smart Agents</div></div>
+          <div className="flex between">
+            <div><div className="big">{k.agents ?? Math.max(6, AGENT_USAGE.length)}</div><div className="lab"># agents on the launchpad</div></div>
+            <div style={{ textAlign: "right" }}>
+              <div className="big" style={{ fontSize: 22 }}>{AGENT_USAGE.reduce((sum, item) => sum + item.inv, 0)}</div>
+              <div className="lab">launches this quarter</div>
+            </div>
+          </div>
+          <div className="att">Lifecycle stages in place · outputs are generated from the same account and signal context</div>
         </div>
       </div>
+
+      <div className="row mt">
+        <div className="card" style={{ flex: 1, minWidth: 330 }}>
+          <h3>Bookings influenced by country (€M)</h3>
+          {byCountry.map((item) => (
+            <div key={item.name} className="mb">
+              <div className="flex between" style={{ fontSize: 12.5 }}>
+                <span>{item.name}</span>
+                <span className="muted">€{item.value.toFixed(1)}M</span>
+              </div>
+              <div className="bar"><i style={{ width: `${(item.value / maxCountry) * 100}%` }} /></div>
+            </div>
+          ))}
+          <div className="legend mt">Country is the primary grain; BU and SBU are roll-ups.</div>
+        </div>
+        <div className="card" style={{ flex: 1, minWidth: 290 }}>
+          <h3>Attainment vs quarterly target</h3>
+          {([
+            ["Bookings influenced", pipelinePct],
+            ["Qualified pipeline", pipelinePct],
+            ["Coverage", coveragePct],
+          ] as [string, number][]).map(([label, value]) => (
+            <div key={label} className="mb">
+              <div className="flex between" style={{ fontSize: 12.5 }}>
+                <span>{label}</span>
+                <span className="muted">{Math.round(value)}%</span>
+              </div>
+              <div className="bar"><i style={{ width: `${Math.min(100, value)}%`, background: pctColor(value) }} /></div>
+            </div>
+          ))}
+          <div className="legend mt">MVP shows attainment only. Month-on-month and quarter-on-quarter trends are deferred until enough history exists.</div>
+        </div>
+      </div>
+
       <div className="flex mt wrapf">
         <button className="btn ghost sm">Export PDF</button>
         <button className="btn ghost sm">Export Excel</button>
@@ -114,7 +221,7 @@ function SellerView() {
   return (
     <>
       <div className="grid" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
-        <Kpi lab="My prospects" val={myProspects.length} meta={`${myProspects.filter((p) => p.st >= 4).length} qualified/converted`} />
+        <Kpi lab="My prospects" val={myProspects.length} meta={`${myProspects.filter((p) => p.st >= 5).length} qualified/converted`} />
         <Kpi lab="My accounts" val={myAccounts.length} meta={`${myAccounts.filter((a) => a.tier === 1).length} tier 1`} />
         <Kpi lab="My pipeline" val={`€${myOpps.reduce((a, o) => a + o.val, 0).toFixed(1)}M`} />
         <Kpi lab="My campaigns" val={myCampaigns.length} meta={`${myCampaigns.filter((c) => c.status === "Active").length} active`} />

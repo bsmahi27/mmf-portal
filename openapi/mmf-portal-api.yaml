@@ -1,0 +1,2350 @@
+openapi: 3.0.3
+info:
+  title: MM Factory Portal API
+  description: >
+    REST API for the Mid-Market Factory Portal covering prospects, campaigns,
+    solutions & assets, triggers radar, Smart Agents, governance, KPIs and
+    administration. Backed by Spring Boot 4 and PostgreSQL; resources map to
+    the tables defined in database/schema.sql.
+  version: "1.0.0"
+servers:
+  - url: /api/v1
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+  - name: Scope
+  - name: Business Units
+  - name: Roles & Permissions
+  - name: Accounts
+  - name: Prospects
+  - name: Prospect Uploads
+  - name: Solutions & Assets
+  - name: Campaigns
+  - name: Opportunities
+  - name: Triggers Radar
+  - name: Smart Agents
+  - name: Governance
+  - name: Dashboard & KPIs
+  - name: Admin
+
+paths:
+  # ---------------------------------------------------------------- Auth
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate a user and issue an access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LoginResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get the current authenticated user, role and portal view
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUser" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  # ---------------------------------------------------------------- Scope
+  /scope:
+    get:
+      tags: [Scope]
+      summary: List business units and countries available for BU/country scoping
+      responses:
+        "200":
+          description: Scope options
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ScopeOptions" }
+
+  # ------------------------------------------------------- Business Units
+  /business-units:
+    get:
+      tags: [Business Units]
+      summary: List business units
+      responses:
+        "200":
+          description: Business units
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/BusinessUnit" }
+
+  /business-units/{code}:
+    parameters:
+      - $ref: "#/components/parameters/BusinessUnitCode"
+    get:
+      tags: [Business Units]
+      summary: Get a business unit by code
+      responses:
+        "200":
+          description: Business unit
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BusinessUnit" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /business-units/{code}/countries:
+    parameters:
+      - $ref: "#/components/parameters/BusinessUnitCode"
+    get:
+      tags: [Business Units]
+      summary: List countries within a business unit
+      responses:
+        "200":
+          description: Countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Country" }
+
+  # --------------------------------------------------- Roles/Permissions
+  /portal-views:
+    get:
+      tags: [Roles & Permissions]
+      summary: List portal views
+      responses:
+        "200":
+          description: Portal views
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PortalView" }
+
+  /roles:
+    get:
+      tags: [Roles & Permissions]
+      summary: List roles
+      responses:
+        "200":
+          description: Roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Role" }
+
+  /roles/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Roles & Permissions]
+      summary: Get a role by name
+      responses:
+        "200":
+          description: Role
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Role" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /roles/{name}/permissions:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Roles & Permissions]
+      summary: Get module access levels for a role
+      responses:
+        "200":
+          description: Role permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RolePermission" }
+    put:
+      tags: [Roles & Permissions]
+      summary: Replace module access levels for a role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: "#/components/schemas/RolePermission" }
+      responses:
+        "200":
+          description: Updated permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RolePermission" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /modules:
+    get:
+      tags: [Roles & Permissions]
+      summary: List modules
+      responses:
+        "200":
+          description: Modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+
+  # -------------------------------------------------------------- Accounts
+  /accounts:
+    get:
+      tags: [Accounts]
+      summary: List accounts
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+        - $ref: "#/components/parameters/CountryFilter"
+        - name: sector
+          in: query
+          schema: { type: string }
+        - name: tier
+          in: query
+          schema: { type: integer, enum: [1, 2] }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged accounts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountPage" }
+    post:
+      tags: [Accounts]
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /accounts/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Accounts]
+      summary: Get an account by name
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Accounts]
+      summary: Update an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Accounts]
+      summary: Delete an account
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ------------------------------------------------------------- Prospects
+  /prospects:
+    get:
+      tags: [Prospects]
+      summary: List prospects
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+        - $ref: "#/components/parameters/CountryFilter"
+        - name: lifecycleStage
+          in: query
+          schema: { $ref: "#/components/schemas/LifecycleStage" }
+        - name: owner
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged prospects
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProspectPage" }
+    post:
+      tags: [Prospects]
+      summary: Create a prospect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProspectInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Prospect" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /prospects/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ProspectId"
+    get:
+      tags: [Prospects]
+      summary: Get a prospect by id
+      responses:
+        "200":
+          description: Prospect
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Prospect" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Prospects]
+      summary: Update a prospect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProspectInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Prospect" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Prospects]
+      summary: Delete a prospect
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /prospects/{id}/convert:
+    parameters:
+      - $ref: "#/components/parameters/ProspectId"
+    post:
+      tags: [Prospects]
+      summary: Convert a qualified prospect into an opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProspectConversionInput" }
+      responses:
+        "201":
+          description: Opportunity created from the prospect
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Opportunity" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /prospects/{id}/interactions:
+    parameters:
+      - $ref: "#/components/parameters/ProspectId"
+    get:
+      tags: [Prospects]
+      summary: List interactions for a prospect
+      responses:
+        "200":
+          description: Interactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Interaction" }
+    post:
+      tags: [Prospects]
+      summary: Log an interaction for a prospect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InteractionInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Interaction" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /prospects/interactions/{interactionId}:
+    parameters:
+      - name: interactionId
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    put:
+      tags: [Prospects]
+      summary: Update an interaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InteractionInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Interaction" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Prospects]
+      summary: Delete an interaction
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ------------------------------------------------------ Prospect Uploads
+  /prospect-uploads/batches:
+    get:
+      tags: [Prospect Uploads]
+      summary: List prospect upload batches
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged upload batches
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadBatchPage" }
+    post:
+      tags: [Prospect Uploads]
+      summary: Upload a prospect batch file for validation
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, businessUnitCode]
+              properties:
+                file: { type: string, format: binary }
+                businessUnitCode: { type: string }
+      responses:
+        "202":
+          description: Batch accepted for validation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadBatch" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /prospect-uploads/batches/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Prospect Uploads]
+      summary: Get an upload batch by id
+      responses:
+        "200":
+          description: Upload batch
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadBatch" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /prospect-uploads/batches/{id}/records:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Prospect Uploads]
+      summary: List row-level validation results for an upload batch
+      responses:
+        "200":
+          description: Upload records
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UploadRecord" }
+
+  /prospect-uploads/batches/{id}/commit:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Prospect Uploads]
+      summary: Commit the accepted rows of a validated batch into prospects
+      responses:
+        "200":
+          description: Batch committed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadBatch" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  # ------------------------------------------------------- Solutions/Assets
+  /solutions:
+    get:
+      tags: [Solutions & Assets]
+      summary: List solutions
+      parameters:
+        - name: solutionClass
+          in: query
+          schema: { $ref: "#/components/schemas/SolutionClass" }
+        - name: maturity
+          in: query
+          schema: { $ref: "#/components/schemas/Maturity" }
+        - name: certificationStatus
+          in: query
+          schema: { $ref: "#/components/schemas/CertificationStatus" }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged solutions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SolutionPage" }
+    post:
+      tags: [Solutions & Assets]
+      summary: Create a solution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SolutionInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Solution" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /solutions/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Solutions & Assets]
+      summary: Get a solution by name
+      responses:
+        "200":
+          description: Solution
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Solution" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Solutions & Assets]
+      summary: Update a solution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SolutionInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Solution" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Solutions & Assets]
+      summary: Delete a solution
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /solutions/{name}/certify:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Solutions & Assets]
+      summary: Certify and publish a solution
+      responses:
+        "200":
+          description: Certified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Solution" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /solutions/{name}/assets:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Solutions & Assets]
+      summary: List assets belonging to a solution
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Asset" }
+    post:
+      tags: [Solutions & Assets]
+      summary: Add an asset to a solution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /solutions/{name}/play-templates:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Solutions & Assets]
+      summary: List play templates belonging to a solution
+      responses:
+        "200":
+          description: Play templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PlayTemplate" }
+    post:
+      tags: [Solutions & Assets]
+      summary: Create a play template for a solution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlayTemplateInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlayTemplate" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /assets/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    get:
+      tags: [Solutions & Assets]
+      summary: Get an asset by id
+      responses:
+        "200":
+          description: Asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Solutions & Assets]
+      summary: Update an asset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Solutions & Assets]
+      summary: Delete an asset
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ------------------------------------------------------------ Campaigns
+  /campaigns:
+    get:
+      tags: [Campaigns]
+      summary: List campaigns
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+        - $ref: "#/components/parameters/CountryFilter"
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/CampaignStatus" }
+        - name: solutionName
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged campaigns
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CampaignPage" }
+    post:
+      tags: [Campaigns]
+      summary: Create a campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CampaignInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Campaign" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /campaigns/playbook-parts:
+    get:
+      tags: [Campaigns]
+      summary: List the standard campaign playbook parts
+      responses:
+        "200":
+          description: Playbook parts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CampaignPlaybookPart" }
+
+  /campaigns/{name}:
+    parameters:
+      - $ref: "#/components/parameters/CampaignName"
+    get:
+      tags: [Campaigns]
+      summary: Get a campaign by name
+      responses:
+        "200":
+          description: Campaign
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Campaign" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Campaigns]
+      summary: Update a campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CampaignInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Campaign" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Campaigns]
+      summary: Delete a campaign
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /campaigns/{name}/status:
+    parameters:
+      - $ref: "#/components/parameters/CampaignName"
+    patch:
+      tags: [Campaigns]
+      summary: Transition a campaign's status (records campaign history)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, changedBy]
+              properties:
+                status: { $ref: "#/components/schemas/CampaignStatus" }
+                changedBy: { type: string }
+                changeDescription: { type: string }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Campaign" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /campaigns/{name}/target-accounts:
+    parameters:
+      - $ref: "#/components/parameters/CampaignName"
+    get:
+      tags: [Campaigns]
+      summary: List uploaded target accounts for a campaign
+      responses:
+        "200":
+          description: Target accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UploadedTargetAccount" }
+    post:
+      tags: [Campaigns]
+      summary: Add a target account to a campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UploadedTargetAccountInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadedTargetAccount" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /campaigns/{name}/history:
+    parameters:
+      - $ref: "#/components/parameters/CampaignName"
+    get:
+      tags: [Campaigns]
+      summary: List the change history of a campaign
+      responses:
+        "200":
+          description: Campaign history
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CampaignHistoryEntry" }
+
+  # --------------------------------------------------------- Opportunities
+  /opportunities:
+    get:
+      tags: [Opportunities]
+      summary: List opportunities
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+        - $ref: "#/components/parameters/CountryFilter"
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/OpportunityStatus" }
+        - name: isMmFactory
+          in: query
+          schema: { type: boolean }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged opportunities
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OpportunityPage" }
+    post:
+      tags: [Opportunities]
+      summary: Create an opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OpportunityInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Opportunity" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /opportunities/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Opportunities]
+      summary: Get an opportunity by id
+      responses:
+        "200":
+          description: Opportunity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Opportunity" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Opportunities]
+      summary: Update an opportunity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/OpportunityInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Opportunity" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Opportunities]
+      summary: Delete an opportunity
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ------------------------------------------------------- Triggers Radar
+  /radar/engines:
+    get:
+      tags: [Triggers Radar]
+      summary: List radar engines
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+      responses:
+        "200":
+          description: Radar engines
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RadarEngine" }
+    post:
+      tags: [Triggers Radar]
+      summary: Create a radar engine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RadarEngineInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RadarEngine" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /radar/engines/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Triggers Radar]
+      summary: Get a radar engine by name
+      responses:
+        "200":
+          description: Radar engine
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RadarEngine" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Triggers Radar]
+      summary: Update a radar engine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RadarEngineInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RadarEngine" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Triggers Radar]
+      summary: Delete a radar engine
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /radar/signals:
+    get:
+      tags: [Triggers Radar]
+      summary: List radar signals
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+        - $ref: "#/components/parameters/CountryFilter"
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/SignalStatus" }
+        - name: severity
+          in: query
+          schema: { $ref: "#/components/schemas/Severity" }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged radar signals
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RadarSignalPage" }
+
+  /radar/signals/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    get:
+      tags: [Triggers Radar]
+      summary: Get a radar signal by id
+      responses:
+        "200":
+          description: Radar signal
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RadarSignal" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /radar/signals/{id}/status:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    patch:
+      tags: [Triggers Radar]
+      summary: Review or dismiss a radar signal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: "#/components/schemas/SignalStatus" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RadarSignal" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # -------------------------------------------------------- Smart Agents
+  /agents:
+    get:
+      tags: [Smart Agents]
+      summary: List Smart Agents
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/AgentStatus" }
+        - name: agentType
+          in: query
+          schema: { $ref: "#/components/schemas/AgentType" }
+      responses:
+        "200":
+          description: Smart Agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Agent" }
+    post:
+      tags: [Smart Agents]
+      summary: Register a new Smart Agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgentInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Agent" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /agents/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Smart Agents]
+      summary: Get a Smart Agent by name
+      responses:
+        "200":
+          description: Agent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Agent" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Smart Agents]
+      summary: Update a Smart Agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgentInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Agent" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Smart Agents]
+      summary: Retire/delete a Smart Agent
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /agents/{name}/usage:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Smart Agents]
+      summary: List usage metric snapshots for a Smart Agent
+      parameters:
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Usage metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AgentUsageMetric" }
+
+  # ---------------------------------------------------------- Governance
+  /governance/councils:
+    get:
+      tags: [Governance]
+      summary: List governance councils
+      responses:
+        "200":
+          description: Councils
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/GovernanceCouncil" }
+    post:
+      tags: [Governance]
+      summary: Create a governance council
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GovernanceCouncilInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceCouncil" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /governance/councils/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Governance]
+      summary: Get a governance council by name
+      responses:
+        "200":
+          description: Council
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceCouncil" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Governance]
+      summary: Update a governance council
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GovernanceCouncilInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceCouncil" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /governance/councils/{name}/meetings:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Governance]
+      summary: List meetings for a council
+      responses:
+        "200":
+          description: Meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/GovernanceMeeting" }
+    post:
+      tags: [Governance]
+      summary: Record a council meeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GovernanceMeetingInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceMeeting" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /governance/decisions:
+    get:
+      tags: [Governance]
+      summary: List governance decisions
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/DecisionStatus" }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged decisions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceDecisionPage" }
+    post:
+      tags: [Governance]
+      summary: Record a governance decision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GovernanceDecisionInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceDecision" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /governance/decisions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    put:
+      tags: [Governance]
+      summary: Update a governance decision (e.g. ratify)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GovernanceDecisionInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceDecision" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /governance/actions:
+    get:
+      tags: [Governance]
+      summary: List governance actions
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/ActionStatus" }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged actions
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceActionPage" }
+    post:
+      tags: [Governance]
+      summary: Create a governance action item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GovernanceActionInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceAction" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /governance/actions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    put:
+      tags: [Governance]
+      summary: Update a governance action item (e.g. close it)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GovernanceActionInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GovernanceAction" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /governance/raci:
+    get:
+      tags: [Governance]
+      summary: List RACI assignments
+      responses:
+        "200":
+          description: RACI assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RaciAssignment" }
+    put:
+      tags: [Governance]
+      summary: Replace the RACI matrix
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: "#/components/schemas/RaciAssignment" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RaciAssignment" }
+
+  /governance/mvp-outcomes:
+    get:
+      tags: [Governance]
+      summary: List MVP outcome tracking items
+      responses:
+        "200":
+          description: MVP outcomes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MvpOutcome" }
+    post:
+      tags: [Governance]
+      summary: Add an MVP outcome tracking item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MvpOutcomeInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MvpOutcome" }
+
+  /governance/mvp-outcomes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    put:
+      tags: [Governance]
+      summary: Update an MVP outcome's status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MvpOutcomeInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MvpOutcome" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ------------------------------------------------------ Dashboard/KPIs
+  /dashboard/summary:
+    get:
+      tags: [Dashboard & KPIs]
+      summary: Get an aggregated performance summary for the current scope
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+        - $ref: "#/components/parameters/CountryFilter"
+      responses:
+        "200":
+          description: KPI summary for the requested scope
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KpiSnapshot" }
+
+  /dashboard/kpi-definitions:
+    get:
+      tags: [Dashboard & KPIs]
+      summary: List KPI definitions
+      responses:
+        "200":
+          description: KPI definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/KpiDefinition" }
+
+  /dashboard/kpi-snapshots:
+    get:
+      tags: [Dashboard & KPIs]
+      summary: List historical KPI snapshots
+      parameters:
+        - $ref: "#/components/parameters/BusinessUnitFilter"
+        - $ref: "#/components/parameters/CountryFilter"
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged KPI snapshots
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/KpiSnapshotPage" }
+
+  # -------------------------------------------------------------- Admin
+  /admin/connectors:
+    get:
+      tags: [Admin]
+      summary: List data source connectors
+      responses:
+        "200":
+          description: Connectors
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DataSourceConnector" }
+    post:
+      tags: [Admin]
+      summary: Register a data source connector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DataSourceConnectorInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataSourceConnector" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /admin/connectors/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Admin]
+      summary: Update a data source connector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DataSourceConnectorInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataSourceConnector" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Admin]
+      summary: Remove a data source connector
+      responses:
+        "204": { description: Deleted }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /admin/reference-data:
+    get:
+      tags: [Admin]
+      summary: List governed reference data categories
+      responses:
+        "200":
+          description: Reference data
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ReferenceData" }
+
+  /admin/reference-data/{category}:
+    parameters:
+      - name: category
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Admin]
+      summary: Update a reference data category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReferenceDataInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReferenceData" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /admin/audit-events:
+    get:
+      tags: [Admin]
+      summary: List audit events
+      parameters:
+        - name: actorName
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged audit events
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuditEventPage" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+    Size:
+      name: size
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+    BusinessUnitFilter:
+      name: businessUnitCode
+      in: query
+      schema: { type: string }
+    CountryFilter:
+      name: countryName
+      in: query
+      schema: { type: string }
+    BusinessUnitCode:
+      name: code
+      in: path
+      required: true
+      schema: { type: string }
+    ProspectId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    CampaignName:
+      name: name
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: The request was invalid
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    NotFound:
+      description: The requested resource does not exist
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+    Conflict:
+      description: The request conflicts with the current state of the resource
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        status: { type: integer }
+        error: { type: string }
+        message: { type: string }
+        path: { type: string }
+        timestamp: { type: string, format: date-time }
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string, format: password }
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        tokenType: { type: string, example: Bearer }
+        expiresInSeconds: { type: integer }
+
+    CurrentUser:
+      type: object
+      properties:
+        username: { type: string }
+        displayName: { type: string }
+        roleName: { type: string }
+        portalView: { type: string }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+
+    ScopeOptions:
+      type: object
+      properties:
+        businessUnits:
+          type: array
+          items: { $ref: "#/components/schemas/BusinessUnit" }
+
+    BusinessUnit:
+      type: object
+      properties:
+        code: { type: string }
+        name: { type: string }
+        hasCountries: { type: boolean }
+
+    Country:
+      type: object
+      properties:
+        name: { type: string }
+        businessUnitCode: { type: string }
+
+    PortalView:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        navigation:
+          type: array
+          items: { type: string }
+
+    Role:
+      type: object
+      properties:
+        name: { type: string }
+        rightsDescription: { type: string }
+        portalViewName: { type: string }
+
+    AccessLevel:
+      type: string
+      enum: [NONE, R, RW, RW_CERTIFY]
+
+    RolePermission:
+      type: object
+      properties:
+        roleName: { type: string }
+        moduleName: { type: string }
+        accessLevel: { $ref: "#/components/schemas/AccessLevel" }
+
+    Account:
+      type: object
+      properties:
+        name: { type: string }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        sector: { type: string }
+        tier: { type: integer, enum: [1, 2] }
+        ownerName: { type: string }
+        source: { type: string }
+    AccountInput:
+      allOf:
+        - $ref: "#/components/schemas/Account"
+    AccountPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/Account" }
+
+    LifecycleStage:
+      type: string
+      enum:
+        - Target Identified
+        - Research
+        - Outreach
+        - Meetings Scheduled / Delivered
+        - Qualified Lead
+        - Converted to Opportunity
+
+    ProspectSource:
+      type: string
+      enum: [Single form, Excel upload, Radar signal, Campaign]
+
+    Prospect:
+      type: object
+      properties:
+        id: { type: string }
+        accountName: { type: string }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        industry: { type: string }
+        estimatedTcvMillions: { type: number, format: double }
+        lifecycleStage: { $ref: "#/components/schemas/LifecycleStage" }
+        ownerName: { type: string }
+        expectedSigningQuarter: { type: string, example: Q1-2027 }
+        source: { $ref: "#/components/schemas/ProspectSource" }
+        uploadBatchId: { type: string, nullable: true }
+        qualificationStatus: { type: string }
+    ProspectInput:
+      allOf:
+        - $ref: "#/components/schemas/Prospect"
+    ProspectPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/Prospect" }
+
+    ProspectConversionInput:
+      type: object
+      required: [name, valueMillions, stage, ownerName, closeDate]
+      properties:
+        name: { type: string }
+        valueMillions: { type: number, format: double }
+        stage: { type: string }
+        ownerName: { type: string }
+        closeDate: { type: string, format: date }
+        solutionName: { type: string, nullable: true }
+        probabilityPercent: { type: integer, minimum: 0, maximum: 100 }
+
+    InteractionType:
+      type: string
+      enum: [Outreach, Call, Meeting scheduled, Meeting delivered]
+    InteractionStatus:
+      type: string
+      enum: [Open, Closed]
+
+    Interaction:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        prospectId: { type: string }
+        interactionType: { $ref: "#/components/schemas/InteractionType" }
+        interactionDate: { type: string, format: date }
+        sellerName: { type: string }
+        notes: { type: string }
+        nextAction: { type: string }
+        status: { $ref: "#/components/schemas/InteractionStatus" }
+        dueDate: { type: string, format: date }
+    InteractionInput:
+      allOf:
+        - $ref: "#/components/schemas/Interaction"
+
+    UploadBatch:
+      type: object
+      properties:
+        id: { type: string }
+        fileName: { type: string }
+        businessUnitCode: { type: string }
+        uploadedBy: { type: string }
+        uploadedAt: { type: string, format: date-time }
+        rowCount: { type: integer }
+        acceptedCount: { type: integer }
+        rejectedCount: { type: integer }
+        status: { type: string }
+    UploadBatchPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/UploadBatch" }
+
+    UploadRecord:
+      type: object
+      properties:
+        batchId: { type: string }
+        rowNumber: { type: integer }
+        companyName: { type: string, nullable: true }
+        result: { type: string, enum: [Accepted, Rejected] }
+        reason: { type: string, nullable: true }
+
+    SolutionClass:
+      type: string
+      enum: [Industry, Business Line, Cross-Business Line]
+    Maturity:
+      type: string
+      enum: [Draft, In-Development, Industrialized]
+    CertificationStatus:
+      type: string
+      enum: [Draft, Submitted, Certified & Published]
+
+    Solution:
+      type: object
+      properties:
+        name: { type: string }
+        solutionClass: { $ref: "#/components/schemas/SolutionClass" }
+        tags:
+          type: array
+          items: { type: string }
+        maturity: { $ref: "#/components/schemas/Maturity" }
+        certificationStatus: { $ref: "#/components/schemas/CertificationStatus" }
+        reuseCount: { type: integer }
+    SolutionInput:
+      allOf:
+        - $ref: "#/components/schemas/Solution"
+    SolutionPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/Solution" }
+
+    Asset:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        assetType: { type: string }
+        version: { type: string }
+        certificationStatus: { $ref: "#/components/schemas/CertificationStatus" }
+        solutionName: { type: string }
+        carveOutReady: { type: boolean }
+    AssetInput:
+      allOf:
+        - $ref: "#/components/schemas/Asset"
+
+    PlayTemplate:
+      type: object
+      properties:
+        name: { type: string }
+        channel: { type: string }
+        stepCount: { type: integer }
+        solutionName: { type: string }
+    PlayTemplateInput:
+      allOf:
+        - $ref: "#/components/schemas/PlayTemplate"
+
+    CampaignStatus:
+      type: string
+      enum: [Draft, Planned, Approved, Active, Paused, Closed, Review]
+
+    CampaignMetrics:
+      type: object
+      properties:
+        accountsReached: { type: integer }
+        outreachCount: { type: integer }
+        meetingCount: { type: integer }
+        pipelineMillions: { type: number, format: double }
+        opportunitiesGenerated: { type: integer }
+        winsMillions: { type: number, format: double }
+
+    Campaign:
+      type: object
+      properties:
+        name: { type: string }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/CampaignStatus" }
+        solutionName: { type: string }
+        radarEngineName: { type: string, nullable: true }
+        ownerName: { type: string }
+        approverName: { type: string }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        targetAccountCount: { type: integer }
+        metrics: { $ref: "#/components/schemas/CampaignMetrics" }
+        signalDriven: { type: boolean }
+    CampaignInput:
+      allOf:
+        - $ref: "#/components/schemas/Campaign"
+    CampaignPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/Campaign" }
+
+    CampaignPlaybookPart:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        displayOrder: { type: integer }
+
+    UploadedTargetAccount:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        sector: { type: string }
+        campaignName: { type: string }
+        ownerName: { type: string }
+        salesforceAccountId: { type: string, nullable: true }
+        matchConfidence: { type: string, enum: [Low, Medium, High] }
+    UploadedTargetAccountInput:
+      allOf:
+        - $ref: "#/components/schemas/UploadedTargetAccount"
+
+    CampaignHistoryEntry:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        campaignName: { type: string }
+        changedAt: { type: string, format: date-time }
+        changedBy: { type: string }
+        changeDescription: { type: string }
+
+    OpportunityStatus:
+      type: string
+      enum: [Open, Won, Lost]
+
+    Opportunity:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        accountName: { type: string }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        industry: { type: string }
+        valueMillions: { type: number, format: double }
+        stage: { type: string }
+        ownerName: { type: string }
+        closeDate: { type: string, format: date }
+        status: { $ref: "#/components/schemas/OpportunityStatus" }
+        isMmFactory: { type: boolean }
+        solutionName: { type: string, nullable: true }
+        probabilityPercent: { type: integer, minimum: 0, maximum: 100 }
+        competitor: { type: string, nullable: true }
+        prospectId: { type: string, nullable: true }
+    OpportunityInput:
+      allOf:
+        - $ref: "#/components/schemas/Opportunity"
+    OpportunityPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/Opportunity" }
+
+    RadarEngine:
+      type: object
+      properties:
+        name: { type: string }
+        businessUnitCode: { type: string }
+        clientCount: { type: integer }
+        ruleCount: { type: integer }
+        schedule: { type: string }
+        signalCount: { type: integer }
+    RadarEngineInput:
+      allOf:
+        - $ref: "#/components/schemas/RadarEngine"
+
+    Severity:
+      type: string
+      enum: [Low, Medium, High]
+    SignalStatus:
+      type: string
+      enum: [New, Reviewed, Dismissed]
+
+    RadarSignal:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        accountName: { type: string }
+        radarEngineName: { type: string }
+        title: { type: string }
+        source: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        severity: { $ref: "#/components/schemas/Severity" }
+        status: { $ref: "#/components/schemas/SignalStatus" }
+        summary: { type: string }
+    RadarSignalPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/RadarSignal" }
+
+    AgentType:
+      type: string
+      enum: [Internal, External]
+    AgentStatus:
+      type: string
+      enum: [Published, In-Test, Draft, Retired]
+
+    Agent:
+      type: object
+      properties:
+        name: { type: string }
+        lifecycleStage: { type: string }
+        agentType: { $ref: "#/components/schemas/AgentType" }
+        status: { $ref: "#/components/schemas/AgentStatus" }
+        version: { type: string }
+        description: { type: string }
+        groundingSources:
+          type: array
+          items: { type: string }
+    AgentInput:
+      allOf:
+        - $ref: "#/components/schemas/Agent"
+
+    AgentUsageMetric:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        agentName: { type: string }
+        measuredAt: { type: string, format: date-time }
+        invocationCount: { type: integer }
+        distinctUserCount: { type: integer }
+        averageRating: { type: number, format: double, minimum: 0, maximum: 5 }
+        outputCount: { type: integer }
+        invocationsByBusinessUnit:
+          type: object
+          additionalProperties: { type: integer }
+        invocationsByCountry:
+          type: object
+          additionalProperties: { type: integer }
+        invocationsByRole:
+          type: object
+          additionalProperties: { type: integer }
+        trend: { type: string }
+        feedback: { type: string }
+
+    GovernanceCouncil:
+      type: object
+      properties:
+        name: { type: string }
+        cadence: { type: string }
+        scope: { type: string, enum: [SBU, BU] }
+        nextMeetingDate: { type: string, format: date }
+        chairRole: { type: string }
+        decisionCount: { type: integer }
+        actionCount: { type: integer }
+    GovernanceCouncilInput:
+      allOf:
+        - $ref: "#/components/schemas/GovernanceCouncil"
+
+    GovernanceMeeting:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        councilName: { type: string }
+        meetingDate: { type: string, format: date }
+        attendees: { type: string }
+        notes: { type: string }
+        decisionCount: { type: integer }
+        actionCount: { type: integer }
+    GovernanceMeetingInput:
+      allOf:
+        - $ref: "#/components/schemas/GovernanceMeeting"
+
+    DecisionStatus:
+      type: string
+      enum: [Open, Ratified]
+
+    GovernanceDecision:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        decision: { type: string }
+        ownerName: { type: string }
+        decisionDate: { type: string, format: date }
+        status: { $ref: "#/components/schemas/DecisionStatus" }
+        referenceType: { type: string, nullable: true }
+    GovernanceDecisionInput:
+      allOf:
+        - $ref: "#/components/schemas/GovernanceDecision"
+    GovernanceDecisionPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/GovernanceDecision" }
+
+    ActionStatus:
+      type: string
+      enum: [Open, Closed]
+
+    GovernanceAction:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        action: { type: string }
+        ownerName: { type: string }
+        dueDate: { type: string, format: date }
+        status: { $ref: "#/components/schemas/ActionStatus" }
+    GovernanceActionInput:
+      allOf:
+        - $ref: "#/components/schemas/GovernanceAction"
+    GovernanceActionPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/GovernanceAction" }
+
+    RaciAssignment:
+      type: object
+      properties:
+        activity: { type: string }
+        responsible: { type: string }
+        accountable: { type: string }
+        consulted: { type: string }
+        informed: { type: string }
+
+    MvpOutcome:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        outcome: { type: string }
+        status: { type: string }
+    MvpOutcomeInput:
+      allOf:
+        - $ref: "#/components/schemas/MvpOutcome"
+
+    KpiDefinition:
+      type: object
+      properties:
+        name: { type: string }
+        unit: { type: string }
+        definition: { type: string }
+        dimensions:
+          type: array
+          items: { type: string }
+
+    KpiSnapshot:
+      type: object
+      properties:
+        asOf: { type: string, format: date-time }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        pipelineMillions: { type: number, format: double }
+        revenueMillions: { type: number, format: double }
+        coveragePercent: { type: number, format: double }
+        reusePercent: { type: number, format: double }
+        signalCount: { type: integer }
+        signalConversionPercent: { type: number, format: double }
+        outreachCount: { type: integer }
+        meetingCount: { type: integer }
+        opportunitiesCreated: { type: integer }
+        stageConversionPercent: { type: number, format: double }
+        pipelineTargetMillions: { type: number, format: double }
+        revenueTargetMillions: { type: number, format: double }
+        coverageTargetPercent: { type: number, format: double }
+    KpiSnapshotPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/KpiSnapshot" }
+
+    DataSourceConnector:
+      type: object
+      properties:
+        name: { type: string }
+        connectorType: { type: string }
+        credentialReference: { type: string, nullable: true }
+        licenseTerms: { type: string }
+        isActive: { type: boolean }
+        usedBy:
+          type: array
+          items: { type: string }
+    DataSourceConnectorInput:
+      allOf:
+        - $ref: "#/components/schemas/DataSourceConnector"
+
+    ReferenceData:
+      type: object
+      properties:
+        category: { type: string }
+        valuesText: { type: string }
+        governanceStatus: { type: string }
+    ReferenceDataInput:
+      allOf:
+        - $ref: "#/components/schemas/ReferenceData"
+
+    AuditEvent:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        occurredAt: { type: string, format: date-time }
+        actorName: { type: string }
+        action: { type: string }
+        eventDetails: { type: string }
+    AuditEventPage:
+      allOf:
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/AuditEvent" }
+
+    PageEnvelope:
+      type: object
+      description: Base paged response wrapper; resource-specific Page schemas override `content`.
+      properties:
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }

@@ -8,9 +8,12 @@ import { Badge, Chip, RoleBar, Tabs } from "@/components/ui";
 import { useDrawer } from "@/lib/drawer";
 import CampaignDrawer from "@/components/drawers/CampaignDrawer";
 
-const TABS = ["Board", "Plan a campaign", "Target accounts", "Playbook repository", "Change history"];
+const TABS = ["Campaign Calendar", "Campaign Builder"];
 const statusColor: Record<string, string> = {
   Active: "green", Review: "violet", Paused: "amber", Draft: "gray", Planned: "blue", Approved: "blue", Closed: "gray",
+};
+const statusBackground: Record<string, string> = {
+  Active: "#0070ad", Review: "#7c3aed", Paused: "#d97706", Draft: "#d6dee7", Planned: "#9dc4dd", Approved: "#12abdb", Closed: "#64748b",
 };
 
 export default function Campaigns() {
@@ -23,15 +26,47 @@ export default function Campaigns() {
   return (
     <div className="wrap">
       <h2 className="page">Campaigns</h2>
-      <p className="sub">Plan · edit · execute · attribute — solutions tied to a shortlisted account or prospect set, prioritized by Radar signals, tracked from targeting to won revenue</p>
+      <p className="sub">Campaign Calendar · Campaign Builder · metrics and GTM assets · all metrics derived from Seller Input, target lists and linked Thor opportunities</p>
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
       <RoleBar role={role} mod="Campaigns" rw={rw} />
-      {tab === "Board" && <Board campaigns={inScopeCampaigns} rw={rw} onNew={() => setTab("Plan a campaign")} />}
-      {tab === "Plan a campaign" && <Plan scope={scope} rw={rw} onUpload={() => setTab("Target accounts")} onProspects={() => go("prospects", "All prospects")} onRadar={() => go("radar", "Engines")} />}
-      {tab === "Target accounts" && <TargetAccounts scope={scope} onRadar={() => go("radar", "Engines")} />}
-      {tab === "Playbook repository" && <Playbook campaigns={inScopeCampaigns} />}
-      {tab === "Change history" && <History campaigns={inScopeCampaigns} />}
+      {tab === "Campaign Calendar" && <Calendar campaigns={inScopeCampaigns} rw={rw} onNew={() => setTab("Campaign Builder")} />}
+      {tab === "Campaign Builder" && <Plan scope={scope} rw={rw} onUpload={() => go("pipeline", "Target prospects intake")} onProspects={() => go("pipeline", "Prospect pipeline")} onRadar={() => go("radar", "Signal radar")} />}
     </div>
+  );
+}
+
+function Calendar({ campaigns, rw, onNew }: { campaigns: typeof CAMPAIGNS; rw: boolean; onNew: () => void }) {
+  const months = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
+  const [status, setStatus] = useState("All");
+  const [bu, setBu] = useState("All");
+  const drawer = useDrawer();
+  const filtered = campaigns.filter((campaign) => (status === "All" || campaign.status === status) && (bu === "All" || campaign.bu === bu));
+  return (
+    <>
+      <div className="card mb"><div className="flex between wrapf">
+        <div className="flex wrapf"><select className="t" style={{ width: "auto" }} value={status} onChange={(e) => setStatus(e.target.value)}><option>All</option>{CSTATES.map((state) => <option key={state}>{state}</option>)}</select>
+          <select className="t" style={{ width: "auto" }} value={bu} onChange={(e) => setBu(e.target.value)}><option>All</option>{["NL", "DE", "UK", "NO"].map((code) => <option key={code} value={code}>{buName(code)}</option>)}</select>
+          <span className="legend">{filtered.length} of {campaigns.length} campaigns · {filtered.filter((campaign) => campaign.status === "Active").length} active</span></div>
+        <div className="flex wrapf"><button className="btn ghost sm">↓ Export calendar</button>{rw && <button className="btn sm" onClick={onNew}>+ New campaign</button>}</div>
+      </div></div>
+      <div className="card campaign-calendar"><h3>Planned &amp; active campaigns by month</h3>
+      <div className="calendar-head"><span>Campaign</span><span>Status</span>{months.map((month) => <span key={month}>{month} 2026</span>)}<span></span></div>
+      {filtered.map((campaign) => {
+        const start = Math.max(0, months.findIndex((month) => campaign.start.includes(month)));
+        const end = Math.max(start, months.findIndex((month) => campaign.end.includes(month)));
+        return <div className="calendar-row" key={campaign.n} onClick={() => drawer.open(campaign.n, <Badge cls={statusColor[campaign.status] || "gray"}>{campaign.status}</Badge>, <CampaignDrawer c={campaign} />)}>
+          <b title={campaign.n}>{campaign.n}<span className="legend calendar-owner">{campaign.bl || "—"} · {campaign.owner}</span></b>
+          <Badge cls={statusColor[campaign.status] || "gray"}>{campaign.status}</Badge>
+          {months.map((month, index) => <span className="calendar-cell" key={month}>{index >= start && index <= end ? <i className={`calendar-bar ${campaign.status.toLowerCase()}`} /> : null}</span>)}
+          <button className="btn ghost sm" onClick={(event) => { event.stopPropagation(); drawer.open(campaign.n, <Badge cls={statusColor[campaign.status] || "gray"}>{campaign.status}</Badge>, <CampaignDrawer c={campaign} />); }}>✎ Edit</button>
+        </div>;
+      })}
+      <div className="legend mt">
+        {CSTATES.map((state) => <button key={state} type="button" className={`status-chip${status === state ? " selected" : ""}`} style={{ background: statusBackground[state] }} onClick={() => setStatus(status === state ? "All" : state)}>{state}</button>)}
+        <span>· Click a campaign to open its overview, metrics, target account universe and GTM assets. Rich calendar visualisation, carousels and event/social snippets are Phase 2 (spec 14).</span>
+      </div>
+      </div>
+    </>
   );
 }
 

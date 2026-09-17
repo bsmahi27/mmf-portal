@@ -1,171 +1,32 @@
 "use client";
 import React, { useState } from "react";
-import { CONNECTORS, ENGINES, SIGNALS } from "@/lib/data";
+import { RADAR_SOURCES, SIGNALS, TRIGGER_CATS } from "@/lib/data";
 import { can, inScope, useApp } from "@/lib/state";
-import { Badge, Chip, RoleBar, Tabs } from "@/components/ui";
+import { Badge, RoleBar, Tabs } from "@/components/ui";
+import type { Signal } from "@/lib/types";
 
-const TABS = ["Signal queue", "Engines", "Engine configuration", "Sources"];
-
-const RULES = [
-  ["Cost-reduction language", "keywords: opex, efficiency, cost programme", "Budget pressure", "1.0"],
-  ["ERP / application estate", "keywords: SAP, legacy ERP, modernization", "Application estate constraint", "0.9"],
-  ["Tender published", "event: tender · threshold > €1M", "Procurement window open", "1.0"],
-  ["Technology hiring spike", "count > 15 roles in 90 days", "In-flight programme being staffed", "0.7"],
-  ["Leadership change", "entity: CIO, CDO, CFO appointment", "New mandate likely", "0.6"],
-];
-
+const TABS = ["Signal radar", "Categories & agent mapping", "Radar engine"];
+const RELS = ["Critical", "High", "Medium", "Low"];
+const COLORS: Record<string, string> = { Critical: "red", High: "amber", Medium: "green", Low: "gray" };
 export default function Radar() {
   const { scope, role, subview, setSub } = useApp();
-  const tab = subview["radar"] || TABS[0];
-  const setTab = (t: string) => setSub("radar", t);
+  const tab = subview.radar || TABS[0];
+  const signals = SIGNALS.filter((signal) => inScope(scope, signal));
   const rw = can(role, "Triggers Radar", true);
-  const inScopeEngines = ENGINES.filter((e) => scope.bu === "all" || e.bu === scope.bu);
-  const inScopeSignals = SIGNALS.filter((s) => inScope(scope, s));
-
-  return (
-    <div className="wrap">
-      <h2 className="page">Triggers Radar</h2>
-      <p className="sub">BU → Radar Engine → Trigger Rules → Signals · daily batch · deterministic filters combined with AI relevance scoring</p>
-      <Tabs tabs={TABS} active={tab} onChange={setTab} />
-      <RoleBar role={role} mod="Triggers Radar" rw={rw} />
-      {tab === "Signal queue" && <SignalQueue signals={inScopeSignals} rw={rw} />}
-      {tab === "Engines" && <Engines engines={inScopeEngines} rw={rw} onConfig={() => setTab("Engine configuration")} />}
-      {tab === "Engine configuration" && <Config scope={scope} rw={rw} />}
-      {tab === "Sources" && <Sources role={role} />}
-    </div>
-  );
+  return <div className="wrap"><h2 className="page">Triggers Radar</h2><p className="sub">Opportunity sensing engine · seven vertical trigger categories, AI-scored signals, recommended Smart Agents and next best actions</p><Tabs tabs={TABS} active={tab} onChange={(value) => setSub("radar", value)} /><RoleBar role={role} mod="Triggers Radar" rw={rw} />{tab === TABS[0] && <SignalRadar signals={signals} rw={rw} />}{tab === TABS[1] && <CategoryMapping signals={signals} />}{tab === TABS[2] && <RadarEngine scope={scope} rw={rw} />}</div>;
 }
 
-function SignalQueue({ signals, rw }: { signals: typeof SIGNALS; rw: boolean }) {
-  const [status, setStatus] = useState<Record<number, string>>({});
-  const sorted = signals.map((s, i) => ({ s, i })).sort((a, b) => b.s.score - a.s.score);
-  return (
-    <>
-      <div className="flex wrapf mb between">
-        <div className="flex wrapf">
-          <Badge cls="blue">New {signals.filter((s) => s.status === "New").length}</Badge>
-          <Badge cls="gray">Reviewed {signals.filter((s) => s.status === "Reviewed").length}</Badge>
-          <Badge cls="gray">Dismissed {signals.filter((s) => s.status === "Dismissed").length}</Badge>
-        </div>
-        <div className="miniflow"><span className="s on">New</span> → <span className="s">Reviewed</span> → <span className="s">Dismissed</span></div>
-      </div>
-      {sorted.map(({ s, i }) => {
-        const st = status[i];
-        return (
-          <div key={i} className="sig" style={{ opacity: st ? 0.6 : 1 }}>
-            <div className="flex between wrapf">
-              <div className="flex wrapf">
-                <span className="score">{s.score}</span>
-                <Badge cls={s.sev === "High" ? "red" : "amber"}>{s.sev}</Badge>
-                <b>{s.acct}</b>
-                <Badge cls={s.status === "New" ? "blue" : "gray"}>{st || s.status}</Badge>
-              </div>
-              <div className="muted" style={{ fontSize: 11 }}>{s.engine} · {s.src}</div>
-            </div>
-            <div style={{ fontWeight: 700, marginTop: 4 }}>{s.title}</div>
-            <div className="mt6">🤖 {s.sum} <Badge cls="amber">AI-generated</Badge></div>
-            {rw && (
-              <div className="flex mt wrapf">
-                <button className="btn ghost sm" onClick={() => setStatus((v) => ({ ...v, [i]: "Reviewed" }))}>✓ Mark reviewed</button>
-                <button className="btn ghost sm" onClick={() => setStatus((v) => ({ ...v, [i]: "Added to campaign" }))}>＋ Add to campaign</button>
-                <button className="btn ghost sm" onClick={() => setStatus((v) => ({ ...v, [i]: "Linked to prospect" }))}>🎯 Link to prospect</button>
-                <button className="btn gray sm" onClick={() => setStatus((v) => ({ ...v, [i]: "Dismissed" }))}>✕ Dismiss</button>
-              </div>
-            )}
-            {st && <div className="mt6"><Badge cls="green">{st}</Badge></div>}
-          </div>
-        );
-      })}
-      <div className="legend mt">Signals are deduped across runs before they reach the queue. Notification via Teams, email or in-app digest — high-severity signals surface immediately.</div>
-    </>
-  );
+function signalScore(signal: Signal) { return signal.sc ? Math.round(signal.sc.acct * .24 + signal.sc.ind * .14 + signal.sc.str * .2 + signal.sc.camp * .14 + signal.sc.pipe * .14 + signal.sc.cred * .14) : signal.score; }
+
+function SignalRadar({ signals, rw }: { signals: typeof SIGNALS; rw: boolean }) {
+  const [category, setCategory] = useState("All"); const [country, setCountry] = useState("All"); const [relevance, setRelevance] = useState("All"); const [query, setQuery] = useState(""); const [selected, setSelected] = useState<Signal>(); const [actions, setActions] = useState<Record<string, string>>({});
+  const list = signals.filter((signal) => (category === "All" || signal.cat === category) && (country === "All" || signal.country === country || signal.bu === country) && (relevance === "All" || signal.rel === relevance) && `${signal.acct} ${signal.title} ${signal.hyp || ""} ${signal.src}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => signalScore(b) - signalScore(a));
+  const active = selected && list.includes(selected) ? selected : list[0]; const countries = [...new Set(signals.map((signal) => signal.country || signal.bu))];
+  return <><div className="flex wrapf mb between"><div className="flex wrapf"><Badge cls="blue">New {signals.filter((s) => s.status === "New").length}</Badge><Badge cls="gray">Reviewed {signals.filter((s) => s.status === "Reviewed").length}</Badge><Badge cls="gray">Dismissed {signals.filter((s) => s.status === "Dismissed").length}</Badge></div><span className="legend">{list.length} signals · ranked by composite score · daily ingestion</span></div><div className="radar3"><div className="catlist"><div className="sect">Trigger categories</div><a className={category === "All" ? "on" : ""} onClick={() => setCategory("All")}>◎ All categories <span className="ct">{signals.length}</span></a>{TRIGGER_CATS.map((item) => <a key={item.k} className={category === item.k ? "on" : ""} onClick={() => setCategory(item.k)}><span>{item.ic}</span>{item.k}<span className="ct">{signals.filter((signal) => signal.cat === item.k).length}</span></a>)}</div><div><div className="flex wrapf mb"><select className="t" style={{ width: "auto" }} value={country} onChange={(e) => setCountry(e.target.value)}><option>All</option>{countries.map((item) => <option key={item}>{item}</option>)}</select><select className="t" style={{ width: "auto" }} value={relevance} onChange={(e) => setRelevance(e.target.value)}><option>All</option>{RELS.map((item) => <option key={item}>{item}</option>)}</select><input className="t" style={{ width: "auto", flex: 1, minWidth: 180 }} placeholder="⌕ Search account, signal or source…" value={query} onChange={(e) => setQuery(e.target.value)} /></div><div className="feed">{list.map((signal) => <div key={`${signal.acct}-${signal.title}`} className={`scard ${active === signal ? "sel" : ""}`} onClick={() => setSelected(signal)}><div className="flex between wrapf"><div><b>{signal.acct}</b><span className="muted"> · {signal.country || signal.bu} · {signal.cat}</span></div><div><Badge cls={COLORS[signal.rel || signal.sev] || "gray"}>{signal.rel || signal.sev}</Badge><Badge cls="gray">{signalScore(signal)}</Badge></div></div><div className="st">{signal.title}</div><div className="mt6">🤖 {signal.hyp || signal.sum} <Badge cls="amber">AI-generated</Badge></div>{rw && <div className="flex wrapf mt6"><button className="btn ghost sm" onClick={(e) => { e.stopPropagation(); setActions((current) => ({ ...current, [signal.acct]: "Reviewed" })); }}>✓ Mark reviewed</button><button className="btn ghost sm" onClick={(e) => { e.stopPropagation(); setActions((current) => ({ ...current, [signal.acct]: "Added to campaign" })); }}>＋ Add to campaign</button><button className="btn gray sm" onClick={(e) => { e.stopPropagation(); setActions((current) => ({ ...current, [signal.acct]: "Dismissed" })); }}>✕ Dismiss</button></div>}{actions[signal.acct] && <div className="mt6"><Badge cls="green">{actions[signal.acct]}</Badge></div>}</div>)}</div></div>{active ? <SignalDetail signal={active} /> : <div className="detail muted">Select a signal to see details.</div>}</div><div className="legend mt">Signals are AI-summarised and AI-scored. Review before client-facing use. Source licensing and personal-data use require the appropriate approvals.</div></>;
 }
 
-function Engines({ engines, rw, onConfig }: { engines: typeof ENGINES; rw: boolean; onConfig: () => void }) {
-  return (
-    <>
-      <div className="flex between mb"><div className="legend">{engines.length} engines in scope</div>{rw && <button className="btn sm" onClick={onConfig}>+ New engine</button>}</div>
-      <div className="cols">
-        {engines.map((e) => (
-          <div key={e.n} className="card">
-            <div className="flex between"><b>{e.n}</b><Badge cls="green">Active</Badge></div>
-            <div className="legend mt6">{e.clients} accounts in the client set · {e.rules} trigger rules · {e.sched} batch</div>
-            <div className="flex between mt">
-              <Badge cls="blue">{e.signals} signals (30d)</Badge>
-              {rw && <button className="btn ghost sm" onClick={onConfig}>Configure</button>}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="legend mt">One BU runs several engines, each watching a defined client set. The client set draws on the same account repository as campaign target accounts, so accounts flow between the two.</div>
-    </>
-  );
-}
+function SignalDetail({ signal }: { signal: Signal }) { const dimensions = signal.sc ? [["Account", signal.sc.acct], ["Industry", signal.sc.ind], ["Strength", signal.sc.str], ["Campaign", signal.sc.camp], ["Pipeline", signal.sc.pipe], ["Credibility", signal.sc.cred]] : [["Relevance", signal.score]]; return <div className="detail"><div className="flex between"><b>{signal.acct}</b><Badge cls={COLORS[signal.rel || signal.sev] || "gray"}>{signal.rel || signal.sev}</Badge></div><div className="legend">{signal.country || signal.bu} · {signal.cat} · {signal.src}</div><h4>What happened</h4><div className="st">{signal.title}</div><h4>Opportunity hypothesis <Badge cls="amber">AI</Badge></h4><div>{signal.hyp || signal.sum}</div><h4>Relevance scoring</h4><div className="dims">{dimensions.map(([label, value]) => <div className="dim" key={label}><b>{value}</b><span>{label}</span></div>)}</div><h4>Recommended agents</h4><div>{(signal.agents || []).map((agent) => <span className="chip" key={agent}>🤖 {agent}</span>)}</div><h4>Recommended next action</h4><div>{signal.action || "Review and route this signal."}</div><h4>Signal lifecycle</h4><div className="lifecycle"><b>Detected</b> → <b>Scored</b> → <b>Reviewed</b> → <b>Actioned</b> → <b>Campaign / Opportunity</b> → <b>Closed</b></div></div>; }
 
-function Config({ scope, rw }: { scope: { bu: string; country: string }; rw: boolean }) {
-  const [sources, setSources] = useState<Record<string, boolean>>(
-    Object.fromEntries(CONNECTORS.filter((c) => c.used.includes("Radar")).map((c) => [c.n, c.active]))
-  );
-  return (
-    <div className="card">
-      <div className="f2">
-        <div><label className="fl">Engine name</label><input className="t" defaultValue={`${scope.bu === "all" ? "DE" : scope.bu} · Industrial`} disabled={!rw} /></div>
-        <div><label className="fl">Business Unit</label><select className="t" disabled={!rw}><option>UK</option><option>DE</option><option>NL</option><option>NO</option></select></div>
-        <div><label className="fl">Batch schedule</label><select className="t" disabled={!rw}><option>Daily</option><option>Weekly</option></select></div>
-        <div><label className="fl">Owner</label><input className="t" defaultValue="Factory Agentic Lead" disabled={!rw} /></div>
-      </div>
-      <label className="fl">Client set</label>
-      <div className="flex wrapf">
-        <button className="btn ghost sm">📄 From a target list</button>
-        <button className="btn ghost sm">🔍 From a filter (BU + sector)</button>
-        <button className="btn ghost sm">🎯 From campaign target accounts</button>
-      </div>
-      <div className="legend mt6">24 accounts currently in the set</div>
+function CategoryMapping({ signals }: { signals: typeof SIGNALS }) { return <><div className="card mb"><h3>Seven vertical trigger categories</h3><p className="muted">Each category carries example signals and default Smart Agent recommendations.</p><table><thead><tr><th>Category</th><th>Example signals</th><th>Recommended agents</th><th>Signals in scope</th></tr></thead><tbody>{TRIGGER_CATS.map((item) => <tr key={item.k}><td><b>{item.ic} {item.k}</b></td><td>{item.ex.map((example) => <span className="chip" key={example}>{example}</span>)}</td><td>{item.agents.map((agent) => <span className="chip" key={agent}>🤖 {agent}</span>)}</td><td>{signals.filter((signal) => signal.cat === item.k).length}</td></tr>)}</tbody></table></div><div className="card"><h3>Signal classification</h3><div className="row">{RELS.map((level) => <div className="kpi" style={{ flex: 1 }} key={level}><div className="lab">{level}</div><div className="val">{signals.filter((signal) => signal.rel === level).length}</div></div>)}</div><div className="mt6">{["Account relevance", "Industry relevance", "Signal strength", "Campaign alignment", "Pipeline alignment", "Source credibility"].map((item) => <span className="chip" key={item}>{item}</span>)}</div></div></>; }
 
-      <label className="fl">Sources</label>
-      <div>
-        {Object.keys(sources).map((n) => (
-          <Chip key={n} on={sources[n]} onClick={() => setSources((v) => ({ ...v, [n]: !v[n] }))}>{n}</Chip>
-        ))}
-      </div>
-
-      <div className="card mt" style={{ background: "#eef4fa" }}>
-        <h3>Trigger rules</h3>
-        <table>
-          <thead><tr><th>Rule</th><th>Logic</th><th>AI relevance focus</th><th>Weight</th></tr></thead>
-          <tbody>{RULES.map((r) => <tr key={r[0]}><td>{r[0]}</td><td className="legend">{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td></tr>)}</tbody>
-        </table>
-        {rw && <button className="btn ghost sm mt">Add rule</button>}
-      </div>
-
-      <label className="fl">AI focus</label>
-      <textarea rows={3} defaultValue="Prioritise signals indicating budget pressure, incumbent contract expiry, ERP or application estate constraints, and technology hiring that implies an in-flight programme. Weight higher for target accounts with an existing Capgemini relationship." disabled={!rw} />
-
-      <div className="mt"><button className="btn" disabled={!rw} onClick={() => alert("Would save the engine and schedule the first batch tonight.")}>Save engine</button></div>
-      <div className="legend mt">Daily batch per engine: fetch sources → rules and AI scoring → dedupe → signals → notify.</div>
-    </div>
-  );
-}
-
-function Sources({ role }: { role: string }) {
-  const canRegister = role === "Admin" || role === "Factory Agentic Lead";
-  return (
-    <>
-      <div className="note">DataSourceConnector is a shared registry used by both Triggers Radar and Smart Agents. Each connector carries its configuration, a Key Vault credential reference and its licence terms.</div>
-      <table>
-        <thead><tr><th>Connector</th><th>Type</th><th>Credential</th><th>Licence</th><th>Used by</th><th>Status</th></tr></thead>
-        <tbody>
-          {CONNECTORS.map((c) => (
-            <tr key={c.n}><td><b>{c.n}</b></td><td>{c.type}</td><td className="muted">{c.cred}</td><td>{c.lic}</td><td>{c.used}</td>
-              <td><Badge cls={c.active ? "green" : "amber"}>{c.active ? "Active" : "Inactive"}</Badge></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="mt">
-        {canRegister ? <button className="btn sm">Register a source</button> : <div className="legend">Only Admin or the Factory Agentic Lead can register a source.</div>}
-      </div>
-      <div className="legend mt">⚠️ Subscription and in-house sources require procurement clearance on licensing terms, and Data Privacy Officer sign-off where personal or regulated data is involved. Credentials held in Azure Key Vault, never in database.</div>
-    </>
-  );
-}
+function RadarEngine({ scope, rw }: { scope: { bu: string; country: string }; rw: boolean }) { const [sources, setSources] = useState(Object.fromEntries(RADAR_SOURCES.map((source) => [source.n, source.active]))); return <><div className="card mb"><h3>Radar engine configuration — {scope.country !== "all" ? scope.country : scope.bu === "all" ? "NCE" : scope.bu}</h3><p className="muted">Configure the account set, source mix and batch schedule for this country.</p><table><thead><tr><th>Enabled</th><th>Source</th><th>What it collects</th></tr></thead><tbody>{RADAR_SOURCES.map((source) => <tr key={source.n}><td><button className={`btn sm ${sources[source.n] ? "" : "gray"}`} disabled={!rw} onClick={() => setSources((current) => ({ ...current, [source.n]: !current[source.n] }))}>{sources[source.n] ? "ON" : "OFF"}</button></td><td><b>{source.n}</b></td><td className="muted">{source.d}</td></tr>)}</tbody></table><div className="flex between mt"><label><input type="checkbox" defaultChecked disabled={!rw} /> Auto-link qualifying signals</label><button className="btn" disabled={!rw}>Save configuration</button></div></div><div className="card mb"><h3>How a signal is produced</h3><div className="flow">{["1 · Source collection", "2 · Radar engine", "3 · LLM processing", "4 · RAG layer", "5 · Radar database"].map((step) => <div className="fs" key={step}><b>{step}</b><span className="legend">Collect, normalize, classify, score, recommend and notify.</span></div>)}</div></div><div className="card"><h3>Signal lifecycle</h3><div className="lifecycle"><b>Detected</b> → <b>Scored</b> → <b>Reviewed</b> → <b>Actioned</b> → <b>Campaign / Opportunity</b> → <b>Closed</b></div></div></>; }

@@ -25,14 +25,14 @@ export default function CampaignDrawer({ c }: { c: Campaign }) {
       </div>
 
       <div className="grid" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
-        <div className="kpi"><div className="lab">Accounts reached</div><div className="val">{c.m.reached}<span className="muted" style={{ fontSize: 13 }}> /{c.accts}</span></div></div>
-        <div className="kpi"><div className="lab">Outreach activities</div><div className="val">{c.m.outreach}</div></div>
-        <div className="kpi"><div className="lab">Meetings secured</div><div className="val">{c.m.meetings}</div></div>
+        <div className="kpi"><div className="lab">Target accounts</div><div className="val">{c.m.targets ?? c.accts}</div></div>
+        <div className="kpi"><div className="lab">Engaged accounts</div><div className="val">{c.m.engaged ?? c.m.reached}</div></div>
+        <div className="kpi"><div className="lab">Meetings delivered</div><div className="val">{c.m.delivered ?? c.m.meetings}</div></div>
         <div className="kpi"><div className="lab">Qualified pipeline</div><div className="val">€{c.m.pipe.toFixed(1)}M</div></div>
-        <div className="kpi"><div className="lab">Opportunities generated</div><div className="val">{c.m.oppsGen}</div></div>
-        <div className="kpi"><div className="lab">Wins</div><div className="val">€{c.m.wins.toFixed(1)}M</div></div>
+        <div className="kpi"><div className="lab">Qualified leads</div><div className="val">{c.m.qleads ?? c.m.oppsGen}</div></div>
+        <div className="kpi"><div className="lab">Bookings influenced</div><div className="val">€{(c.m.bookings ?? c.m.pipe * 0.55).toFixed(1)}M</div></div>
       </div>
-      <div className="legend mt6">The six MVP metrics. Outreach and meetings from ProspectInteraction records; pipeline and wins roll up from MM-Factory-classified Salesforce opps linked to this campaign; opps generated from ProspectOpportunityLink.</div>
+      <div className="legend mt6">Prototype campaign metrics: target accounts, engagement, meetings, qualified leads, influenced pipeline and bookings.</div>
 
       <h3 className="mt">Campaign record</h3>
       <table>
@@ -72,7 +72,7 @@ export default function CampaignDrawer({ c }: { c: Campaign }) {
             return (
               <tr key={p.id}>
                 <td>{p.n} <span className="legend">{p.id}</span></td>
-                <td><Badge cls={p.st === 5 ? "green" : p.st >= 4 ? "teal" : "gray"}>{PSTAGES[p.st]}</Badge></td>
+                <td><Badge cls={p.st === 6 ? "green" : p.st >= 5 ? "teal" : "gray"}>{PSTAGES[p.st]}</Badge></td>
                 <td><Badge cls={p.tcv > 5 ? "red" : p.tcv > 2.5 ? "amber" : "gray"}>{p.tcv > 5 ? "High" : p.tcv > 2.5 ? "Medium" : "Low"}</Badge></td>
                 <td>{sig ? `${sig.score} · ${sig.title}` : "—"}</td>
               </tr>

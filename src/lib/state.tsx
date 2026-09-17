@@ -25,8 +25,8 @@ type AppState = {
 const Ctx = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [scope, setScope] = useState<Scope>({ bu: "DE", country: "all" });
-  const [role, setRoleState] = useState<string>("BU MM (Business) Leader");
+  const [scope, setScope] = useState<Scope>({ bu: "NL", country: "all", level: "country" });
+  const [role, setRoleState] = useState<string>("Country MM Leader");
   const [pview, setPviewState] = useState<string>("Leadership");
   const [current, setCurrent] = useState<string>("dashboard");
   const [subview, setSubview] = useState<Record<string, string>>({});
@@ -84,7 +84,7 @@ export function inScope<T extends { bu: string; country?: string }>(scope: Scope
 }
 
 export function scopeLabel(scope: Scope) {
-  if (scope.bu === "all") return "NCE — SBU roll-up";
+  if (scope.level === "sbu" || scope.bu === "all") return "NCE — SBU roll-up";
   if (scope.country !== "all") return `${scope.country} (Nordics)`;
   const bu = BUS.find((b) => b.code === scope.bu);
   return bu ? bu.name : scope.bu;
@@ -98,7 +98,7 @@ export function buName(code: string) {
 export function kpiFor(scope: Scope): KpiSet {
   if (scope.bu === "all") {
     const bus = Object.values(KPI);
-    const sum = (f: keyof KpiSet) => bus.reduce((a, b) => a + b[f], 0);
+    const sum = (f: keyof KpiSet) => bus.reduce((a, b) => a + (b[f] ?? 0), 0);
     const avg = (f: keyof KpiSet) => sum(f) / bus.length;
     return {
       pipeline: sum("pipeline"), revenue: sum("revenue"), outreach: sum("outreach"),
@@ -107,8 +107,8 @@ export function kpiFor(scope: Scope): KpiSet {
       pTarget: sum("pTarget"), rTarget: sum("rTarget"), cTarget: avg("cTarget"),
     };
   }
-  if (scope.bu === "NO" && scope.country !== "all") return KPI_COUNTRY[scope.country];
-  return KPI[scope.bu];
+  if (scope.bu === "NO" && scope.country !== "all") return KPI_COUNTRY[scope.country] || KPI["NO"]!;
+  return KPI[scope.bu] || KPI["NL"]!;
 }
 
 export function perms(role: string): string[] {

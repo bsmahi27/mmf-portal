@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mid-Market Factory Portal — Prototype v3.0</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --ink:#12233f; --mut:#64748b; --line:#e4e8ef;
+    --navy:#0b1f3a; --navy2:#13294b;
+    --primary:#0070ad; --primary-d:#005b8f; --teal:#12abdb; --cyan:#2ec4f1;
+    --amber:#e08b00; --red:#d1394b; --green:#2a9d5c; --violet:#6b5bd2; --chip:#eef2f7;
+    --pink:#ff5a6e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+  a{color:inherit;text-decoration:none}
+  .app{display:flex;min-height:100vh}
+  /* Sidebar */
+  .side{width:238px;background:var(--navy);color:#c7d3e3;flex-shrink:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .brand{padding:18px 18px 14px;border-bottom:1px solid #1c3357}
+  .brand b{color:#fff;font-size:15px;display:block}
+  .brand span{font-size:11px;color:#7c93b3}
+  .nav{padding:10px 8px;flex:1;overflow:auto}
+  .nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;margin:2px 0;color:#c7d3e3;font-size:13.5px;cursor:pointer}
+  .nav a:hover{background:#16305a;color:#fff}
+  .nav a.active{background:var(--primary);color:#fff}
+  .nav .ico{width:18px;text-align:center;font-size:15px}
+  .nav .sect{font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:12px 12px 4px;color:#5b74a0}
+  .side .foot{padding:12px 16px;border-top:1px solid #1c3357;font-size:11px;color:#5b74a0}
+  /* Main */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .top{background:#fff;border-bottom:1px solid var(--line);padding:9px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  .top h1{font-size:16px;margin:0;flex:1;min-width:150px}
+  .sel{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut)}
+  select{font:inherit;font-size:12.5px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  .who{display:flex;align-items:center;gap:8px}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+  .asof{font-size:11px;color:var(--mut);background:#f1f5f9;border:1px solid var(--line);border-radius:6px;padding:4px 8px;white-space:nowrap}
+  .wrap{padding:20px;max-width:1280px}
+  .banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:8px 14px;border-radius:8px;font-size:12.5px;margin-bottom:16px}
+  /* Generic */
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .card h3{margin:0 0 12px;font-size:14px}
+  h2.page{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:13px;margin:0 0 16px}
+  .grid{display:grid;gap:14px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .lab{font-size:12px;color:var(--mut)}
+  .kpi .val{font-size:24px;font-weight:700;margin:4px 0 2px}
+  .kpi .meta{font-size:11.5px;color:var(--mut)}
+  .up{color:var(--green)} .down{color:var(--red)}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-size:12.8px;vertical-align:top}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut);font-weight:600;white-space:nowrap}
+  tr.clk{cursor:pointer} tr.clk:hover{background:#f6f9fc}
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:10.8px;font-weight:600;white-space:nowrap}
+  .b-blue{background:#e0f0fa;color:#005b8f}.b-teal{background:#d5f2fb;color:#0b7c9e}.b-amber{background:#fdf0d5;color:#8a5a00}
+  .b-red{background:#fde5e8;color:#a81f30}.b-green{background:#d9f2e4;color:#1c7345}.b-gray{background:#eef2f7;color:#475569}
+  .b-violet{background:#eae7fb;color:#4c3fb0}.b-pink{background:#ffe4e8;color:#b8283c}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--primary);background:var(--primary);color:#fff;font-size:12.5px;cursor:pointer;font-weight:500;font-family:inherit}
+  .btn:hover{background:var(--primary-d)}
+  .btn.ghost{background:#fff;color:var(--primary)}
+  .btn.sm{padding:4px 9px;font-size:11.5px}
+  .btn.gray{background:#fff;color:var(--mut);border-color:var(--line)}
+  .btn.warn{background:#fff;color:var(--amber);border-color:#f2d59a}
+  .bar{height:8px;background:#eef2f7;border-radius:5px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--primary);border-radius:5px}
+  .chip{display:inline-block;background:var(--chip);border-radius:6px;padding:3px 9px;font-size:11.2px;color:#475569;margin:2px 4px 2px 0;cursor:default}
+  .chip.on{background:var(--primary);color:#fff}
+  .chip.clk{cursor:pointer}
+  .cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:13px}
+  .kanban{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}
+  .kanban5{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
+  .kcol{background:#eef2f7;border-radius:10px;padding:9px;min-height:110px}
+  .kcol h4{margin:0 0 8px;font-size:10px;text-transform:uppercase;color:var(--mut);letter-spacing:.03em;line-height:1.3}
+  .kcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 9px;margin-bottom:7px;cursor:pointer;font-size:11.8px}
+  .kcard:hover{border-color:var(--primary)}
+  .kcard b{display:block;font-size:12.2px;margin-bottom:2px}
+  .drawer-bg{position:fixed;inset:0;background:rgba(11,31,58,.45);display:none;z-index:20}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:560px;max-width:94vw;background:#fff;box-shadow:-8px 0 30px rgba(0,0,0,.18);
+    transform:translateX(100%);transition:transform .22s ease;z-index:21;overflow:auto}
+  .drawer.open{transform:translateX(0)} .drawer-bg.open{display:block}
+  .drawer .dh{padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;display:flex;align-items:flex-start;gap:10px;z-index:2}
+  .drawer .dh h3{margin:0;font-size:16px} .drawer .db{padding:16px 20px 60px}
+  .x{margin-left:auto;cursor:pointer;color:var(--mut);font-size:22px;line-height:1}
+  .muted{color:var(--mut)} .mt{margin-top:13px}.mb{margin-bottom:10px}.mt6{margin-top:6px}
+  .flex{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}.wrapf{flex-wrap:wrap}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
+  .tabs button{background:none;border:none;padding:9px 12px;font:inherit;font-size:13px;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent}
+  .tabs button.active{color:var(--primary);border-color:var(--primary);font-weight:600}
+  .sig{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
+  .sig .score{font-weight:700;font-size:16px}
+  .dims{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:9px 0}
+  .dim{background:#f6f9fc;border-radius:7px;padding:6px 8px}
+  .dim .dl{font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--mut)}
+  .dim .dv{font-size:13px;font-weight:600}
+  .agentcard{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;display:flex;flex-direction:column}
+  .agentcard:hover{border-color:var(--primary);box-shadow:0 4px 14px rgba(0,112,173,.08)}
+  .agentcard .ic{width:36px;height:36px;border-radius:10px;background:#e6f2f9;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:9px}
+  textarea,input.t,select.t{width:100%;font:inherit;font-size:12.8px;padding:8px 9px;border:1px solid var(--line);border-radius:8px;resize:vertical;background:#fff;color:var(--ink)}
+  label.fl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--mut);margin:11px 0 4px;font-weight:600}
+  .f2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  .output{background:#f6f9fc;border:1px solid var(--line);border-radius:10px;padding:13px;font-size:12.8px;white-space:pre-wrap;line-height:1.5}
+  .legend{font-size:11.2px;color:var(--mut)}
+  /* Dashboard tiles */
+  .dashgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:13px}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px;cursor:pointer;position:relative;transition:box-shadow .15s,transform .15s}
+  .tile:hover{box-shadow:0 6px 20px rgba(11,31,58,.10);transform:translateY(-1px);border-color:#cfe0ee}
+  .tile .th{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+  .tile .ti{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;flex-shrink:0}
+  .tile .tt{font-size:14.5px;font-weight:700}
+  .tile .drill{position:absolute;top:14px;right:15px;font-size:11px;color:var(--mut);opacity:0;transition:opacity .15s}
+  .tile:hover .drill{opacity:1}
+  .tile .big{font-size:30px;font-weight:700;line-height:1.1}
+  .tile .lab{font-size:11.5px;color:var(--mut);line-height:1.3}
+  .metricrow{display:flex;gap:0;align-items:stretch}
+  .metricrow>div{flex:1;padding:0 14px;border-left:1px solid var(--line)}
+  .metricrow>div:first-child{padding-left:0;border-left:none}
+  .att{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:11px;color:var(--mut)}
+  .ring{width:58px;height:58px;flex-shrink:0}
+  /* Triggers Radar v3 — three-column vertical layout */
+  .radar3{display:grid;grid-template-columns:236px minmax(0,1fr) 340px;gap:13px;align-items:start}
+  .catlist{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;position:sticky;top:64px}
+  .catlist a{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:12.6px;cursor:pointer;color:var(--ink)}
+  .catlist a:hover{background:#f1f6fb}
+  .catlist a.on{background:var(--primary);color:#fff}
+  .catlist a .ct{margin-left:auto;font-size:10.5px;opacity:.8}
+  .feed{display:flex;flex-direction:column;gap:10px}
+  .scard{background:#fff;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer}
+  .scard:hover{border-color:#cfe0ee;border-left-color:var(--primary);box-shadow:0 4px 14px rgba(11,31,58,.07)}
+  .scard.sel{border-color:var(--primary);border-left-color:var(--primary);background:#f9fcff}
+  .scard .st{font-weight:600;font-size:13.4px;margin:5px 0 4px}
+  .detail{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px;position:sticky;top:64px;max-height:calc(100vh - 90px);overflow:auto}
+  .detail h4{margin:14px 0 5px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+  .detail h4:first-of-type{margin-top:6px}
+  .sbar{display:flex;align-items:center;gap:7px;margin:3px 0}
+  .sbar span{font-size:11px;color:var(--mut);width:62px;flex-shrink:0}
+  .sbar .bar{flex:1}
+  .flow{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
+  .flow .fs{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+  .flow .fs b{display:block;font-size:11.5px;color:var(--primary);margin-bottom:4px}
+  .lifecycle{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--mut)}
+  .lifecycle b{background:#eef2f7;border-radius:6px;padding:4px 10px;color:var(--ink);font-weight:600}
+  /* Agent launchpad */
+  .agentcard .use{font-size:11.6px;color:var(--primary);background:#f0f7fb;border-radius:7px;padding:6px 8px;margin-bottom:9px}
+  /* Campaign cards */
+  .campgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:13px}
+  .campcard{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+  .campcard:hover{border-color:var(--primary);box-shadow:0 6px 18px rgba(11,31,58,.09)}
+  .campcard .hero{height:92px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff;position:relative}
+  .campcard .hero i{position:absolute;top:8px;left:10px;font-style:normal;font-size:11px;font-weight:700;background:rgba(255,255,255,.22);border-radius:5px;padding:2px 7px}
+  .campcard .cb{padding:11px 13px;display:flex;flex-direction:column;flex:1}
+  .campcard .cb b{font-size:13px;text-transform:uppercase;letter-spacing:.02em}
+  .campcard .cb p{margin:5px 0 9px;font-size:11.8px;color:var(--mut);line-height:1.4;flex:1}
+  .monthrail{display:flex;flex-direction:column;gap:5px;width:78px;flex-shrink:0}
+  .monthrail button{font:inherit;font-size:11.5px;padding:6px 0;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  .monthrail button.on{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600}
+  .m9{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+  @media (max-width:1250px){.radar3{grid-template-columns:210px minmax(0,1fr)}.detail{display:none}.m9{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width:1100px){.dashgrid{grid-template-columns:repeat(6,1fr)}.kanban{grid-template-columns:repeat(4,1fr)}.dims{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>MM Factory Portal</b><span>NCE · Mid-Market Factory · v3.1</span></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="foot">Prototype · mock data<br>Spec v3.0 · 11 Aug 2026<br>© Capgemini 2026</div>
+  </aside>
+  <div class="main">
+    <div class="top">
+      <h1 id="ptitle">Dashboard</h1>
+      <div class="sel">Scope
+        <select id="scope"></select>
+      </div>
+      <div class="sel">Role
+        <select id="role">
+          <option>SBU Factory Leader</option><option selected>Country MM Leader</option><option>Seller / Client Partner</option>
+          <option>Campaign Lead</option><option>Factory Agentic Lead</option><option>Factory S&amp;A Lead</option>
+        </select>
+      </div>
+      <button class="btn" onclick="openSellerInput()">✎ Log an interaction</button>
+      <div class="asof" id="asof"></div>
+      <div class="who"><div class="avatar" id="ava">CM</div></div>
+    </div>
+    <div class="wrap" id="view"></div>
+  </div>
+</div>
+<div class="drawer-bg" id="dbg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"></div>
+
+<script>
+/* =========================================================================
+   MID-MARKET FACTORY PORTAL — PROTOTYPE v3.0
+   Aligned to specification v3.0 (11 Aug 2026). Incorporates the revised
+   Campaign section pack, the Pipeline Explorer pack and the revised
+   vertical Triggers Radar & Smart Agents design.
+   Illustrative mock data only.
+   ========================================================================= */
+
+const money = n => '€'+(n>=1000? (n/1000).toFixed(1)+'B' : n.toFixed(1)+'M');
+const AS_OF = 'Thor data as of 11 Aug 2026, 02:00 CET';
+
+/* ---------------- Geography: country is the primary scope ---------------- */
+const COUNTRIES = [
+  {code:'NL',name:'Netherlands',bu:'Netherlands'},
+  {code:'DE',name:'Germany',bu:'Germany'},
+  {code:'UK',name:'United Kingdom',bu:'UK'},
+  {code:'SE',name:'Sweden',bu:'Nordics'},
+  {code:'FI',name:'Finland',bu:'Nordics'},
+  {code:'NO',name:'Norway',bu:'Nordics'},
+  {code:'DK',name:'Denmark',bu:'Nordics'},
+];
+const BUS = ['Netherlands','Germany','UK','Nordics'];
+
+/* ---------------- Mock data ---------------- */
+const KPI = {
+  NL:{clients:150,target:50,active:31,meetings:12,bookings:45.0,pipeline:38.4,campaigns:4,partners:12,assets:55,triggers:92,agents:9,qleads:7,coverage:62,reuse:71,
+      tBookings:60,tPipeline:50,tCoverage:70},
+  DE:{clients:210,target:64,active:41,meetings:18,bookings:52.6,pipeline:47.1,campaigns:5,partners:9,assets:62,triggers:118,agents:9,qleads:11,coverage:64,reuse:68,
+      tBookings:70,tPipeline:60,tCoverage:70},
+  UK:{clients:180,target:55,active:29,meetings:14,bookings:38.2,pipeline:33.7,campaigns:4,partners:8,assets:48,triggers:87,agents:9,qleads:8,coverage:53,reuse:64,
+      tBookings:55,tPipeline:45,tCoverage:65},
+  SE:{clients:95,target:32,active:17,meetings:8,bookings:19.4,pipeline:16.2,campaigns:3,partners:6,assets:34,triggers:51,agents:9,qleads:5,coverage:53,reuse:60,
+      tBookings:26,tPipeline:22,tCoverage:62},
+  FI:{clients:70,target:26,active:14,meetings:7,bookings:14.1,pipeline:12.8,campaigns:2,partners:5,assets:28,triggers:44,agents:9,qleads:4,coverage:54,reuse:58,
+      tBookings:18,tPipeline:17,tCoverage:60},
+  NO:{clients:62,target:22,active:10,meetings:5,bookings:11.3,pipeline:9.6,campaigns:2,partners:4,assets:24,triggers:36,agents:9,qleads:3,coverage:45,reuse:55,
+      tBookings:15,tPipeline:14,tCoverage:60},
+  DK:{clients:58,target:20,active:9,meetings:4,bookings:9.8,pipeline:8.4,campaigns:2,partners:4,assets:22,triggers:31,agents:9,qleads:3,coverage:45,reuse:56,
+      tBookings:13,tPipeline:12,tCoverage:60},
+};
+
+const ACCOUNTS=[
+  {n:'Van Oord Logistics',c:'NL',ind:'Transport',type:'New logo'},
+  {n:'Delft Mobility',c:'NL',ind:'Automotive',type:'Existing client'},
+  {n:'Rotterdam FoodCo',c:'NL',ind:'CPG',type:'Lapsed'},
+  {n:'Amstel Retail Group',c:'NL',ind:'Retail',type:'New logo'},
+  {n:'Rheinwerk AG',c:'DE',ind:'Manufacturing',type:'Existing client'},
+  {n:'BavariaTech GmbH',c:'DE',ind:'TMT',type:'New logo'},
+  {n:'NordChem',c:'DE',ind:'E&U',type:'Existing client'},
+  {n:'Munich Retail Group',c:'DE',ind:'Retail',type:'Competitor-held'},
+  {n:'Albion Foods',c:'UK',ind:'CPG',type:'Existing client'},
+  {n:'Thames Utilities',c:'UK',ind:'E&U',type:'New logo'},
+  {n:'Pennine Manufacturing',c:'UK',ind:'Manufacturing',type:'Lapsed'},
+  {n:'Nordic Steel AB',c:'SE',ind:'Manufacturing',type:'Existing client'},
+  {n:'Vasa Retail AB',c:'SE',ind:'Retail',type:'New logo'},
+  {n:'Suomi Paper Oyj',c:'FI',ind:'Manufacturing',type:'New logo'},
+  {n:'Helsinki HealthTech',c:'FI',ind:'Life Sciences',type:'Existing client'},
+  {n:'Fjord Energy ASA',c:'NO',ind:'E&U',type:'New logo'},
+  {n:'Copenhagen Logistics',c:'DK',ind:'Transport',type:'Existing client'},
+];
+
+const PSTAGES=['Target / Identified','Research','Outreach','Meeting Scheduled','Meeting Delivered','Qualified Lead','Converted to CRM'];
+
+const PROSPECTS=[
+  {id:'PRS-NL-00021',n:'Van Oord Logistics',c:'NL',ind:'Transport',tcv:2.4,st:0,own:'J. Bakker',sign:'Q1-2027',src:'Upload',bl:'ADM',mm:true},
+  {id:'PRS-NL-00022',n:'Amstel Retail Group',c:'NL',ind:'Retail',tcv:1.8,st:2,own:'J. Bakker',sign:'Q4-2026',src:'Campaign',bl:'CIS',mm:true},
+  {id:'PRS-NL-00024',n:'Rotterdam FoodCo',c:'NL',ind:'CPG',tcv:3.1,st:4,own:'S. de Vries',sign:'Q4-2026',src:'Radar trigger',bl:'ADM',mm:true},
+  {id:'PRS-NL-00027',n:'Zuid Water Board',c:'NL',ind:'E&U',tcv:1.2,st:1,own:'S. de Vries',sign:'Q2-2027',src:'Upload',bl:'I&D',mm:false},
+  {id:'PRS-NL-00029',n:'Haarlem Insurance',c:'NL',ind:'Financial Services',tcv:2.9,st:5,own:'J. Bakker',sign:'Q4-2026',src:'Manual',bl:'CIS',mm:true},
+  {id:'PRS-NL-00030',n:'Eindhoven Devices BV',c:'NL',ind:'Manufacturing',tcv:4.2,st:3,own:'M. Jansen',sign:'Q1-2027',src:'Campaign',bl:'ADM',mm:true},
+  {id:'PRS-DE-00042',n:'Rheinwerk AG',c:'DE',ind:'Manufacturing',tcv:5.6,st:5,own:'K. Weber',sign:'Q4-2026',src:'Radar trigger',bl:'ADM',mm:true},
+  {id:'PRS-DE-00045',n:'BavariaTech GmbH',c:'DE',ind:'TMT',tcv:2.1,st:2,own:'K. Weber',sign:'Q1-2027',src:'Upload',bl:'CIS',mm:true},
+  {id:'PRS-DE-00048',n:'Sachsen Logistik',c:'DE',ind:'Transport',tcv:1.7,st:0,own:'T. Schmidt',sign:'Q2-2027',src:'Upload',bl:'ADM',mm:false},
+  {id:'PRS-DE-00051',n:'Munich Retail Group',c:'DE',ind:'Retail',tcv:3.4,st:4,own:'T. Schmidt',sign:'Q4-2026',src:'Campaign',bl:'DCX',mm:true},
+  {id:'PRS-UK-00013',n:'Pennine Manufacturing',c:'UK',ind:'Manufacturing',tcv:2.2,st:1,own:'R. Patel',sign:'Q1-2027',src:'Upload',bl:'ADM',mm:true},
+  {id:'PRS-UK-00016',n:'Thames Utilities',c:'UK',ind:'E&U',tcv:4.8,st:5,own:'R. Patel',sign:'Q4-2026',src:'Radar trigger',bl:'I&D',mm:true},
+  {id:'PRS-UK-00019',n:'Mersey Care Group',c:'UK',ind:'Life Sciences',tcv:1.4,st:3,own:'L. Murray',sign:'Q2-2027',src:'Manual',bl:'Invent',mm:false},
+  {id:'PRS-SE-00007',n:'Vasa Retail AB',c:'SE',ind:'Retail',tcv:2.0,st:2,own:'A. Lindqvist',sign:'Q1-2027',src:'Upload',bl:'DCX',mm:true},
+  {id:'PRS-SE-00009',n:'Nordic Steel AB',c:'SE',ind:'Manufacturing',tcv:3.6,st:4,own:'A. Lindqvist',sign:'Q4-2026',src:'Campaign',bl:'ADM',mm:true},
+  {id:'PRS-FI-00004',n:'Suomi Paper Oyj',c:'FI',ind:'Manufacturing',tcv:2.8,st:5,own:'M. Virtanen',sign:'Q4-2026',src:'Radar trigger',bl:'ADM',mm:true},
+  {id:'PRS-FI-00006',n:'Helsinki HealthTech',c:'FI',ind:'Life Sciences',tcv:1.1,st:1,own:'M. Virtanen',sign:'Q2-2027',src:'Upload',bl:'I&D',mm:false},
+  {id:'PRS-NO-00003',n:'Fjord Energy ASA',c:'NO',ind:'E&U',tcv:3.9,st:3,own:'E. Hansen',sign:'Q1-2027',src:'Manual',bl:'CIS',mm:true},
+  {id:'PRS-DK-00002',n:'Copenhagen Logistics',c:'DK',ind:'Transport',tcv:1.6,st:2,own:'N. Sørensen',sign:'Q1-2027',src:'Upload',bl:'ADM',mm:true},
+];
+
+const OPPS=[
+  {id:'OPP-4471203',n:'Rheinwerk — SAP S/4 migration',acct:'Rheinwerk AG',c:'DE',ind:'Manufacturing',tcv:8.2,stage:5,own:'K. Weber',sign:'12 Dec 2026',bu:'Germany',bl:'ADM',mm:true,st:'Open',prob:60,win:'Medium',comp:'Accenture',partner:'SAP',offering:'ERP Modernization',from:'PRS-DE-00042'},
+  {id:'OPP-4471884',n:'Rheinwerk — IT cost takeout',acct:'Rheinwerk AG',c:'DE',ind:'Manufacturing',tcv:3.4,stage:3,own:'K. Weber',sign:'28 Feb 2027',bu:'Germany',bl:'ADM',mm:true,st:'Open',prob:35,win:'High',comp:'—',partner:'—',offering:'Application Managed Services',from:''},
+  {id:'OPP-4472019',n:'BavariaTech — Cloud migration',acct:'BavariaTech GmbH',c:'DE',ind:'TMT',tcv:4.1,stage:2,own:'K. Weber',sign:'30 Apr 2027',bu:'Germany',bl:'CIS',mm:false,st:'Open',prob:20,win:'Medium',comp:'Capita',partner:'AWS',offering:'Cloud Landing Zone',from:''},
+  {id:'OPP-4470551',n:'NordChem — Data platform',acct:'NordChem',c:'DE',ind:'E&U',tcv:6.0,stage:6,own:'T. Schmidt',sign:'15 Nov 2026',bu:'Germany',bl:'I&D',mm:true,st:'Open',prob:75,win:'High',comp:'Atos',partner:'Microsoft',offering:'Data & AI Platform',from:''},
+  {id:'OPP-4469902',n:'NordChem — Managed services',acct:'NordChem',c:'DE',ind:'E&U',tcv:5.2,stage:7,own:'T. Schmidt',sign:'02 Jul 2026',bu:'Germany',bl:'ADM',mm:true,st:'Won',prob:100,win:'—',comp:'—',partner:'—',offering:'Application Managed Services',from:''},
+  {id:'OPP-4473310',n:'Delft Mobility — ADM reboot',acct:'Delft Mobility',c:'NL',ind:'Automotive',tcv:4.7,stage:4,own:'M. Jansen',sign:'20 Jan 2027',bu:'Netherlands',bl:'ADM',mm:true,st:'Open',prob:45,win:'High',comp:'Sopra Steria',partner:'—',offering:'Application Managed Services',from:''},
+  {id:'OPP-4473455',n:'Amstel Retail — Commerce revamp',acct:'Amstel Retail Group',c:'NL',ind:'Retail',tcv:2.9,stage:3,own:'J. Bakker',sign:'15 Mar 2027',bu:'Netherlands',bl:'DCX',mm:true,st:'Open',prob:30,win:'Medium',comp:'Valtech',partner:'Adobe',offering:'Commerce',from:''},
+  {id:'OPP-4473501',n:'Rotterdam FoodCo — Vendor consolidation',acct:'Rotterdam FoodCo',c:'NL',ind:'CPG',tcv:3.3,stage:2,own:'S. de Vries',sign:'30 Apr 2027',bu:'Netherlands',bl:'ADM',mm:true,st:'Open',prob:20,win:'Medium',comp:'—',partner:'—',offering:'Vendor Consolidation',from:'PRS-NL-00024'},
+  {id:'OPP-4468120',n:'Albion — SAP S/4',acct:'Albion Foods',c:'UK',ind:'CPG',tcv:5.5,stage:4,own:'R. Patel',sign:'10 Feb 2027',bu:'UK',bl:'ADM',mm:true,st:'Open',prob:45,win:'Medium',comp:'IBM',partner:'SAP',offering:'ERP Modernization',from:''},
+  {id:'OPP-4468344',n:'Thames — Grid analytics',acct:'Thames Utilities',c:'UK',ind:'E&U',tcv:3.8,stage:2,own:'R. Patel',sign:'28 May 2027',bu:'UK',bl:'I&D',mm:true,st:'Open',prob:20,win:'High',comp:'—',partner:'Microsoft',offering:'Data & AI Platform',from:'PRS-UK-00016'},
+  {id:'OPP-4466780',n:'Nordic Steel — Smart factory',acct:'Nordic Steel AB',c:'SE',ind:'Manufacturing',tcv:4.4,stage:5,own:'A. Lindqvist',sign:'18 Dec 2026',bu:'Nordics',bl:'CIS',mm:true,st:'Open',prob:60,win:'Medium',comp:'Tietoevry',partner:'Siemens',offering:'Smart Factory',from:''},
+  {id:'OPP-4466991',n:'Suomi Paper — ADM consolidation',acct:'Suomi Paper Oyj',c:'FI',ind:'Manufacturing',tcv:3.0,stage:2,own:'M. Virtanen',sign:'12 Jun 2027',bu:'Nordics',bl:'ADM',mm:true,st:'Open',prob:20,win:'High',comp:'Tietoevry',partner:'—',offering:'Application Managed Services',from:'PRS-FI-00004'},
+  {id:'OPP-4467220',n:'Fjord Energy — Cloud foundation',acct:'Fjord Energy ASA',c:'NO',ind:'E&U',tcv:2.6,stage:3,own:'E. Hansen',sign:'22 Mar 2027',bu:'Nordics',bl:'CIS',mm:false,st:'Open',prob:35,win:'Low',comp:'Sopra Steria',partner:'AWS',offering:'Cloud Landing Zone',from:''},
+  {id:'OPP-4467401',n:'Copenhagen Logistics — Modernization',acct:'Copenhagen Logistics',c:'DK',ind:'Transport',tcv:2.1,stage:4,own:'N. Sørensen',sign:'05 Feb 2027',bu:'Nordics',bl:'ADM',mm:true,st:'Open',prob:45,win:'Medium',comp:'—',partner:'—',offering:'Enterprise Technology Modernization',from:''},
+];
+
+/* ---- Opportunity enrichment v3.0 — detailed-view fields (Pipeline Explorer pack, 11 Aug 2026) ---- */
+const PORTFOLIOS={'ADM':'Applications & Technology','CIS':'Cloud & Infrastructure','I&D':'Insights & Data','DCX':'Digital Customer Experience','Invent':'Strategy & Transformation','CCA':'Customer Engagement','PBS':'Business Services','Sogeti':'Quality Engineering'};
+const TECHS={'ERP Modernization':'SAP S/4HANA','Application Managed Services':'Multi-platform','Cloud Landing Zone':'AWS / Azure','Data & AI Platform':'Microsoft Fabric','Commerce':'Adobe Commerce','Vendor Consolidation':'Multi-platform','Smart Factory':'Siemens MindSphere','Enterprise Technology Modernization':'Multi-platform'};
+const REPORT_SECTOR={'Manufacturing':'Manufacturing, Automotive & Life Sciences','Automotive':'Manufacturing, Automotive & Life Sciences','Life Sciences':'Manufacturing, Automotive & Life Sciences','Retail':'Consumer Products, Retail & Distribution','CPG':'Consumer Products, Retail & Distribution','Transport':'Consumer Products, Retail & Distribution','E&U':'Energy, Utilities & Chemicals','TMT':'Telecom, Media & Technology','Financial Services':'Financial Services'};
+
+const CAMPAIGNS=[
+  {n:'NL Industrial — IT Cost Takeout Q3',c:'NL',bl:'ADM',status:'Active',sol:'IT Cost Takeout',owner:'S. de Vries',sponsor:'NL MM Leader',launch:'01 Jul 2026',dur:'12 weeks',theme:'IT Cost Takeout',partner:'—',
+    m:{targets:14,engaged:9,booked:11,delivered:7,qleads:3,pipe:6.4,cxo:5,inbound:22,reach:1800}},
+  {n:'NL Retail — Commerce Acceleration',c:'NL',bl:'DCX',status:'Active',sol:'Retail Commerce Accelerator',owner:'J. Bakker',sponsor:'NL BL Lead DCX',launch:'15 Jul 2026',dur:'10 weeks',theme:'Sector play',partner:'Adobe',
+    m:{targets:8,engaged:5,booked:6,delivered:4,qleads:2,pipe:2.9,cxo:2,inbound:14,reach:1200}},
+  {n:'NL Cross-sector — Vendor Consolidation',c:'NL',bl:'ADM',status:'Planned',sol:'Vendor Consolidation Play',owner:'M. Jansen',sponsor:'NL MM Leader',launch:'01 Sep 2026',dur:'8 weeks',theme:'Vendor Consolidation',partner:'—',
+    m:{targets:10,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'NL SAP — S/4 Readiness',c:'NL',bl:'ADM',status:'Draft',sol:'SAP S/4 Rapid Migration',owner:'S. de Vries',sponsor:'TBC',launch:'01 Oct 2026',dur:'12 weeks',theme:'SAP / Cloud',partner:'SAP',
+    m:{targets:6,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'DE Manufacturing — Smart Factory',c:'DE',bl:'CIS',status:'Active',sol:'Manufacturing Smart Factory',owner:'K. Weber',sponsor:'DE MM Leader',launch:'10 Jun 2026',dur:'14 weeks',theme:'Sector play',partner:'Siemens',
+    m:{targets:12,engaged:8,booked:9,delivered:6,qleads:4,pipe:8.2,cxo:6,inbound:31,reach:2400}},
+  {n:'DE Industrial — Cost Takeout',c:'DE',bl:'ADM',status:'Active',sol:'IT Cost Takeout',owner:'T. Schmidt',sponsor:'DE MM Leader',launch:'01 Jul 2026',dur:'12 weeks',theme:'IT Cost Takeout',partner:'—',
+    m:{targets:16,engaged:11,booked:14,delivered:9,qleads:5,pipe:9.6,cxo:7,inbound:28,reach:2100}},
+  {n:'DE TMT — Cloud Migration',c:'DE',bl:'CIS',status:'Approved',sol:'Hyperscaler Landing Zone',owner:'K. Weber',sponsor:'DE BL Lead CIS',launch:'01 Sep 2026',dur:'10 weeks',theme:'SAP / Cloud',partner:'AWS',
+    m:{targets:9,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'DE Retail — Commerce Push',c:'DE',bl:'DCX',status:'Review',sol:'Retail Commerce Accelerator',owner:'T. Schmidt',sponsor:'DE MM Leader',launch:'01 Apr 2026',dur:'12 weeks',theme:'Sector play',partner:'Adobe',
+    m:{targets:7,engaged:6,booked:8,delivered:6,qleads:3,pipe:4.1,cxo:4,inbound:19,reach:1500}},
+  {n:'DE E&U — Grid Data Platform',c:'DE',bl:'I&D',status:'Planned',sol:'E&U Grid Data Platform',owner:'K. Weber',sponsor:'DE BL Lead I&D',launch:'15 Sep 2026',dur:'10 weeks',theme:'Data & AI',partner:'Microsoft',
+    m:{targets:8,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'UK Manufacturing — ADM Reboot',c:'UK',bl:'ADM',status:'Active',sol:'ADM Reboot Play',owner:'R. Patel',sponsor:'UK MM Leader',launch:'20 Jun 2026',dur:'12 weeks',theme:'Enterprise Technology Modernization',partner:'—',
+    m:{targets:13,engaged:7,booked:9,delivered:5,qleads:3,pipe:5.5,cxo:4,inbound:17,reach:1600}},
+  {n:'UK E&U — Grid Analytics',c:'UK',bl:'I&D',status:'Active',sol:'E&U Grid Data Platform',owner:'L. Murray',sponsor:'UK BL Lead I&D',launch:'01 Jul 2026',dur:'10 weeks',theme:'Data & AI',partner:'Microsoft',
+    m:{targets:7,engaged:4,booked:5,delivered:3,qleads:2,pipe:3.8,cxo:3,inbound:11,reach:900}},
+  {n:'UK CPG — SAP S/4 Wave 1',c:'UK',bl:'ADM',status:'Approved',sol:'SAP S/4 Rapid Migration',owner:'R. Patel',sponsor:'UK MM Leader',launch:'01 Sep 2026',dur:'14 weeks',theme:'SAP / Cloud',partner:'SAP',
+    m:{targets:9,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'UK Cross-sector — Cyber Baseline',c:'UK',bl:'CIS',status:'Draft',sol:'Cyber Baseline for Mid-Market',owner:'L. Murray',sponsor:'TBC',launch:'15 Oct 2026',dur:'8 weeks',theme:'Cybersecurity',partner:'—',
+    m:{targets:5,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'SE Industrial — Smart Factory',c:'SE',bl:'CIS',status:'Active',sol:'Manufacturing Smart Factory',owner:'A. Lindqvist',sponsor:'Nordics MM Leader',launch:'01 Jul 2026',dur:'12 weeks',theme:'Sector play',partner:'Siemens',
+    m:{targets:9,engaged:6,booked:7,delivered:4,qleads:2,pipe:4.4,cxo:3,inbound:12,reach:800}},
+  {n:'SE Retail — Commerce',c:'SE',bl:'DCX',status:'Planned',sol:'Retail Commerce Accelerator',owner:'A. Lindqvist',sponsor:'Nordics BL Lead DCX',launch:'01 Sep 2026',dur:'10 weeks',theme:'Sector play',partner:'Adobe',
+    m:{targets:6,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'SE Cross-sector — Cost Takeout',c:'SE',bl:'ADM',status:'Draft',sol:'IT Cost Takeout',owner:'A. Lindqvist',sponsor:'TBC',launch:'15 Oct 2026',dur:'10 weeks',theme:'IT Cost Takeout',partner:'—',
+    m:{targets:7,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'FI Manufacturing — ADM Consolidation',c:'FI',bl:'ADM',status:'Active',sol:'ADM Reboot Play',owner:'M. Virtanen',sponsor:'Nordics MM Leader',launch:'15 Jun 2026',dur:'12 weeks',theme:'Enterprise Technology Modernization',partner:'—',
+    m:{targets:8,engaged:5,booked:6,delivered:4,qleads:2,pipe:3.0,cxo:3,inbound:9,reach:700}},
+  {n:'FI Public — Data Platform',c:'FI',bl:'I&D',status:'Planned',sol:'E&U Grid Data Platform',owner:'M. Virtanen',sponsor:'Nordics BL Lead I&D',launch:'01 Oct 2026',dur:'8 weeks',theme:'Data & AI',partner:'Microsoft',
+    m:{targets:5,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'NO Energy — Cloud Foundation',c:'NO',bl:'CIS',status:'Active',sol:'Hyperscaler Landing Zone',owner:'E. Hansen',sponsor:'Nordics MM Leader',launch:'01 Jul 2026',dur:'10 weeks',theme:'SAP / Cloud',partner:'AWS',
+    m:{targets:7,engaged:4,booked:4,delivered:2,qleads:1,pipe:2.6,cxo:2,inbound:8,reach:600}},
+  {n:'NO Cross-sector — Cost Takeout',c:'NO',bl:'ADM',status:'Draft',sol:'IT Cost Takeout',owner:'E. Hansen',sponsor:'TBC',launch:'01 Nov 2026',dur:'10 weeks',theme:'IT Cost Takeout',partner:'—',
+    m:{targets:5,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+  {n:'DK Transport — Modernization',c:'DK',bl:'ADM',status:'Active',sol:'ADM Reboot Play',owner:'N. Sørensen',sponsor:'Nordics MM Leader',launch:'10 Jul 2026',dur:'12 weeks',theme:'Enterprise Technology Modernization',partner:'—',
+    m:{targets:6,engaged:3,booked:4,delivered:2,qleads:1,pipe:2.1,cxo:2,inbound:7,reach:500}},
+  {n:'DK Cross-sector — Cyber Baseline',c:'DK',bl:'CIS',status:'Planned',sol:'Cyber Baseline for Mid-Market',owner:'N. Sørensen',sponsor:'Nordics BL Lead CIS',launch:'15 Sep 2026',dur:'8 weeks',theme:'Cybersecurity',partner:'—',
+    m:{targets:5,engaged:0,booked:0,delivered:0,qleads:0,pipe:0,cxo:0,inbound:0,reach:0}},
+];
+
+/* ---- Campaign enrichment v3.0 (11 Aug 2026) — aligned to the Campaign section pack ----
+   Adds calendar placement, target industry, multi-geography, campaign visual and the
+   extended metric set (leads converted, pipeline influenced, bookings, revenue won).   */
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CAMP_HERO=[['#0b3d6b','#1a7fb8','\U0001F3ED'],['#134e4a','#0f9d8e','\U0001F30D'],['#14532d','#3f9e57','\U0001F331'],['#312e81','#5b56d6','\U0001F9E0'],
+  ['#0c4a6e','#0ea5e9','\U0001F510'],['#1e293b','#475f8a','\U0001F4CA'],['#4c1d95','#7c3aed','\U0001F465'],['#7c2d12','#d97706','\U0001F3D4']];
+const CAMP_DESC={
+  'IT Cost Takeout':'Reduce IT and operations costs by 20\u201330% through optimization, rationalization and automation.',
+  'SAP / Cloud':'Accelerate the move to S/4HANA and hyperscaler platforms with a fixed-scope, mid-market migration path.',
+  'Vendor Consolidation':'Consolidate a fragmented supplier estate into one accountable partner with a clear cost and service case.',
+  'Enterprise Technology Modernization':'Modernise the application and technology estate to release cost and unlock delivery speed.',
+  'Data & AI':'Build a governed data foundation and put AI to work on the highest-value business decisions.',
+  'Cybersecurity':'Strengthen cyber resilience with a mid-market baseline covering identity, endpoint and operations.',
+  'Sector play':'Sector-specific play combining industry insight, a reference architecture and a partner-backed accelerator.'};
+const CAMP_INDUSTRY={'IT Cost Takeout':'Industrial Manufacturing','SAP / Cloud':'Cross-industry','Vendor Consolidation':'Cross-industry',
+  'Enterprise Technology Modernization':'Cross-industry','Data & AI':'Energy & Utilities','Cybersecurity':'Cross-industry','Sector play':'Retail & Manufacturing'};
+CAMPAIGNS.forEach((c,i)=>{
+  const [dd,mon,yr]=c.launch.split(' ');
+  c.month=MONTHS.indexOf(mon); c.year=+yr;
+  c.weeks=parseInt(c.dur)||12;
+  const st=new Date(+yr, c.month, +dd); const en=new Date(st.getTime()+c.weeks*7*864e5);
+  c.startD=c.launch; c.endD=`${String(en.getDate()).padStart(2,'0')} ${MONTHS[en.getMonth()]} ${en.getFullYear()}`;
+  c.desc=CAMP_DESC[c.theme]||'Mid-Market Factory campaign.';
+  c.ind=CAMP_INDUSTRY[c.theme]||'Cross-industry';
+  c.geos=[COUNTRIES.find(x=>x.code===c.c).name];
+  c.hero=CAMP_HERO[i%CAMP_HERO.length];
+  const m=c.m;
+  m.leads=m.qleads;
+  m.bookings=+(m.pipe*0.55).toFixed(1);
+  m.revenue=+(m.pipe*0.24).toFixed(1);
+  m.tTargets=Math.round(m.targets*1.15)||m.targets;
+});
+OPPS.forEach((o,i)=>{
+  o.cv=+(o.tcv*(0.30+((i%5)*0.04))).toFixed(1);
+  o.portfolio=PORTFOLIOS[o.bl]||o.bl;
+  o.tech=TECHS[o.offering]||'Multi-platform';
+  o.repInd=o.ind;
+  o.repSector=REPORT_SECTOR[o.ind]||'Cross-industry';
+  o.bid=['Competitive RFP','Sole source','Renewal / extension','Proactive proposal'][i%4];
+  o.ctt=o.sign;
+});
+
+const CAMP_STATUSES=['Draft','Planned','Approved','Active','Paused','Closed','Review'];
+
+const BLS=['ADM','CIS','I&D','DCX','Invent','CCA','PBS','Sogeti'];
+const THEMES=['IT Cost Takeout','SAP / Cloud','Vendor Consolidation','Enterprise Technology Modernization','Data & AI','Cybersecurity','Sector play'];
+
+const ASSETS=[
+  {n:'IT Cost Takeout — value case model',bl:'ADM',th:'IT Cost Takeout',type:'Template',repo:'TLC',ver:'v3',cert:'Certified',reuse:34},
+  {n:'ADM Reboot — solution blueprint',bl:'ADM',th:'Enterprise Technology Modernization',type:'Blueprint',repo:'Export',ver:'v2',cert:'Certified',reuse:21},
+  {n:'Vendor consolidation battle card',bl:'ADM',th:'Vendor Consolidation',type:'Battle card',repo:'MSDT',ver:'v1',cert:'Certified',reuse:12},
+  {n:'SAP S/4 rapid migration — pitch deck',bl:'ADM',th:'SAP / Cloud',type:'Deck',repo:'TLC',ver:'v4',cert:'Certified',reuse:41},
+  {n:'Mid-market ADM sales kit',bl:'ADM',th:'Enterprise Technology Modernization',type:'Sales kit',repo:'Marketing',ver:'v2',cert:'Submitted',reuse:6},
+  {n:'Hyperscaler landing zone — blueprint',bl:'CIS',th:'SAP / Cloud',type:'Blueprint',repo:'Export',ver:'v3',cert:'Certified',reuse:28},
+  {n:'Smart factory — reference architecture',bl:'CIS',th:'Sector play',type:'Blueprint',repo:'Export',ver:'v2',cert:'Certified',reuse:22},
+  {n:'Cyber baseline for mid-market — offer 1-pager',bl:'CIS',th:'Cybersecurity',type:'Template',repo:'Marketing',ver:'v1',cert:'Draft',reuse:3},
+  {n:'Grid data platform — case study (NordChem)',bl:'I&D',th:'Data & AI',type:'Case study',repo:'Proposal',ver:'v1',cert:'Certified',reuse:15},
+  {n:'Data & AI readiness assessment',bl:'I&D',th:'Data & AI',type:'Template',repo:'TLC',ver:'v2',cert:'Certified',reuse:18},
+  {n:'Commerce accelerator — demo pack',bl:'DCX',th:'Sector play',type:'Deck',repo:'MSDT',ver:'v2',cert:'Certified',reuse:9},
+  {n:'Retail commerce — RFP response library',bl:'DCX',th:'Sector play',type:'RFP response',repo:'Proposal',ver:'v3',cert:'Certified',reuse:11},
+  {n:'Mid-market transformation thesis',bl:'Invent',th:'Enterprise Technology Modernization',type:'Deck',repo:'Export',ver:'v1',cert:'Submitted',reuse:4},
+  {n:'Customer experience diagnostic',bl:'CCA',th:'Sector play',type:'Template',repo:'TLC',ver:'v1',cert:'Certified',reuse:7},
+  {n:'Managed testing for mid-market',bl:'Sogeti',th:'Enterprise Technology Modernization',type:'Deck',repo:'Marketing',ver:'v2',cert:'Certified',reuse:8},
+];
+
+const PARTNER_PLAYS=[
+  {n:'SAP RISE for Mid-Market',p:'SAP',tier:'Platinum',bl:'ADM',th:'SAP / Cloud',cty:['NL','DE','UK','SE','FI'],st:'Active',vp:'Fixed-scope RISE migration with Capgemini mid-market accelerators and SAP funding support.',pipe:9.4,camp:3,owner:'S. de Vries'},
+  {n:'AWS Landing Zone Fast Start',p:'AWS',tier:'Premier',bl:'CIS',th:'SAP / Cloud',cty:['DE','UK','NO','DK'],st:'Active',vp:'Six-week landing zone with AWS MAP funding; ideal entry play for new logos.',pipe:6.7,camp:3,owner:'K. Weber'},
+  {n:'Microsoft Data & AI Jumpstart',p:'Microsoft',tier:'Premier',bl:'I&D',th:'Data & AI',cty:['NL','DE','UK','SE','FI','NO','DK'],st:'Active',vp:'Fabric-based data platform starter with joint Microsoft investment and a 4-week proof of value.',pipe:8.1,camp:4,owner:'L. Murray'},
+  {n:'Adobe Commerce for Mid-Market Retail',p:'Adobe',tier:'Gold',bl:'DCX',th:'Sector play',cty:['NL','DE','SE'],st:'Active',vp:'Pre-configured commerce stack for retailers under €3B revenue, with Adobe co-marketing.',pipe:4.2,camp:3,owner:'J. Bakker'},
+  {n:'Siemens Smart Factory Accelerator',p:'Siemens',tier:'Gold',bl:'CIS',th:'Sector play',cty:['DE','SE'],st:'Active',vp:'OT/IT convergence play for discrete manufacturers, co-delivered with Siemens.',pipe:5.3,camp:2,owner:'A. Lindqvist'},
+  {n:'ServiceNow ITSM Consolidation',p:'ServiceNow',tier:'Gold',bl:'ADM',th:'Vendor Consolidation',cty:['NL','UK'],st:'Active',vp:'Consolidate fragmented tooling onto a single ITSM platform; strong cost-takeout narrative.',pipe:3.1,camp:2,owner:'M. Jansen'},
+  {n:'Google Cloud Modernization Sprint',p:'Google Cloud',tier:'Silver',bl:'CIS',th:'Enterprise Technology Modernization',cty:['UK','DK'],st:'Draft',vp:'Application modernization sprint with Google funding — pending mid-market pricing model.',pipe:0,camp:0,owner:'R. Patel'},
+];
+
+const SOLUTIONS=[
+  {n:'IT Cost Takeout',cls:'Cross-BL',bl:'ADM · CIS',th:'IT Cost Takeout',mat:'Industrialized',assets:8,reuse:34},
+  {n:'ADM Reboot Play',cls:'Business Line',bl:'ADM',th:'Enterprise Technology Modernization',mat:'Industrialized',assets:9,reuse:26},
+  {n:'SAP S/4 Rapid Migration',cls:'Business Line',bl:'ADM',th:'SAP / Cloud',mat:'Industrialized',assets:12,reuse:41},
+  {n:'Hyperscaler Landing Zone',cls:'Cross-BL',bl:'CIS · I&D',th:'SAP / Cloud',mat:'Industrialized',assets:10,reuse:28},
+  {n:'Manufacturing Smart Factory',cls:'Industry',bl:'CIS',th:'Sector play',mat:'Industrialized',assets:9,reuse:22},
+  {n:'Retail Commerce Accelerator',cls:'Industry',bl:'DCX',th:'Sector play',mat:'In-Development',assets:5,reuse:9},
+  {n:'E&U Grid Data Platform',cls:'Industry',bl:'I&D',th:'Data & AI',mat:'Industrialized',assets:7,reuse:15},
+  {n:'Vendor Consolidation Play',cls:'Cross-BL',bl:'ADM · CIS',th:'Vendor Consolidation',mat:'In-Development',assets:4,reuse:12},
+  {n:'Cyber Baseline for Mid-Market',cls:'Cross-BL',bl:'CIS',th:'Cybersecurity',mat:'Draft',assets:3,reuse:3},
+];
+
+/* ---------------- TRIGGERS RADAR v3.0 (11 Aug 2026) ----------------
+   Seven vertical trigger categories. One category active at a time.
+   Each signal answers: what happened / why it matters / what next.       */
+const TRIGGER_CATS=[
+  {k:'Technology Initiatives',ic:'⚙️',ex:['SAP','Cloud','AI','Data','Cyber'],agents:['Intelio','Nexus','Knowledge SPOC']},
+  {k:'Strategic Initiatives',ic:'🧭',ex:['Growth Strategy','Operating Model Change','Transformation Programme'],agents:['Intelio','Researcher','Market Intel in a Box']},
+  {k:'Sustainability Announcements',ic:'🌱',ex:['Net Zero','ESG','Green Energy'],agents:['Researcher','Nexus']},
+  {k:'Executive Changes',ic:'👤',ex:['CIO','CTO','CFO','COO'],agents:['Rapport','Stakeholder Profile','LinkedIn CXO Voice']},
+  {k:'Organisational Resizing',ic:'📉',ex:['Layoffs','Hiring Freeze','Shared Services','Outsourcing'],agents:['Financial Analyst','Intelio']},
+  {k:'M&A / Acquisitions',ic:'🤝',ex:['Merger','Acquisition','PE Investment','Demerger'],agents:['Financial Analyst','Researcher','Intelio']},
+  {k:'Financial Updates',ic:'💶',ex:['Profit Warning','Margin Pressure','Cost Reduction'],agents:['Financial Analyst','Spend Scout']},
+];
+const RELS=['Critical','High','Medium','Low'];
+const RELCLS={Critical:'b-red',High:'b-amber',Medium:'b-green',Low:'b-gray'};
+
+/* Radar backend pipeline (spec 04 §Backend architecture) */
+const RADAR_PIPE=[
+  {s:'1 · Source collection',d:'Company websites · annual reports · press releases · public tenders · hiring sites · news sources',ic:'🌐'},
+  {s:'2 · Radar engine',d:'Collect → normalize → deduplicate → classify',ic:'⚙️'},
+  {s:'3 · LLM processing',d:'Category · AI summary · relevance score · opportunity hypothesis · recommended agent · recommended action',ic:'🤖'},
+  {s:'4 · RAG layer',d:'Campaigns · pipeline · solutions & assets · account intelligence · agent catalogue',ic:'📚'},
+  {s:'5 · Radar database',d:'Signal ID · account · category · source · date · relevance · recommended agent · recommended action · status',ic:'🗄️'},
+];
+const SIG_LIFECYCLE=['Detected','Scored','Reviewed','Actioned','Campaign / Opportunity','Closed'];
+
+
+const SIGNALS=[
+  {id:'SIG-1041',c:'UK',sector:'E&U',acct:'Thames Utilities',cat:'Technology Initiatives',rel:'Critical',title:'Digital twin and asset data programme announced',src:'Company website',date:'10 Aug 2026',
+   hyp:'Potential opportunity across asset management, cloud, data platform and operational technology. AMP8 capital plan gives the programme funding certainty.',
+   agents:['Intelio','Nexus','Knowledge SPOC'],action:'Add to UK E&U campaign and create an opportunity candidate',sc:{acct:92,ind:91,str:88,camp:86,pipe:87,cred:94}},
+  {id:'SIG-1039',c:'UK',sector:'E&U',acct:'Thames Utilities',cat:'Executive Changes',rel:'High',title:'New CIO appointed with a transformation background',src:'Leadership announcement',date:'09 Aug 2026',
+   hyp:'New technology leadership may reset transformation priorities and supplier relationships within the first 100 days.',
+   agents:['Rapport','LinkedIn CXO Voice','Stakeholder Profile'],action:'Assign to account owner and prepare a stakeholder engagement brief',sc:{acct:86,ind:78,str:80,camp:80,pipe:77,cred:90}},
+  {id:'SIG-1036',c:'DE',sector:'Manufacturing',acct:'Rheinwerk AG',cat:'Technology Initiatives',rel:'High',title:'SAP S/4HANA transformation programme referenced in hiring activity',src:'Job boards',date:'08 Aug 2026',
+   hyp:'Concentrated SAP hiring indicates ERP modernisation being staffed internally — a window for a managed or assured delivery alternative.',
+   agents:['Intelio','Nexus','Knowledge SPOC'],action:'Launch Intelio and prepare an SAP opportunity hypothesis',sc:{acct:88,ind:82,str:74,camp:79,pipe:80,cred:78}},
+  {id:'SIG-1034',c:'NL',sector:'Retail',acct:'Amstel Retail Group',cat:'Strategic Initiatives',rel:'Medium',title:'Customer experience strategy refresh announced',src:'Press release',date:'07 Aug 2026',
+   hyp:'Omnichannel and loyalty initiatives may align to DCX and data offers ahead of the FY planning cycle.',
+   agents:['Market Intel in a Box','Researcher','Nexus'],action:'Save to account intelligence and review for the retail campaign',sc:{acct:72,ind:64,str:60,camp:64,pipe:64,cred:88}},
+  {id:'SIG-1031',c:'FI',sector:'Manufacturing',acct:'Suomi Paper Oyj',cat:'Financial Updates',rel:'Critical',title:'Group-wide efficiency and cost reduction programme announced',src:'Financial update',date:'06 Aug 2026',
+   hyp:'\u20ac60M efficiency target over two years with shared services in scope — ADM consolidation, automation and managed services plays all apply.',
+   agents:['Financial Analyst','Spend Scout','Intelio'],action:'Create a cost-takeout play and link it to Pipeline Explorer',sc:{acct:94,ind:87,str:90,camp:88,pipe:85,cred:92}},
+  {id:'SIG-1028',c:'UK',sector:'Manufacturing',acct:'Pennine Manufacturing',cat:'M&A / Acquisitions',rel:'High',title:'Private-equity acquisition completed',src:'Market news',date:'05 Aug 2026',
+   hyp:'New PE owner typically drives a 100-day transformation, cost and operating model agenda.',
+   agents:['Financial Analyst','Researcher','Intelio'],action:'Create a PE transformation hypothesis and assign seller follow-up',sc:{acct:83,ind:86,str:84,camp:79,pipe:80,cred:86}},
+  {id:'SIG-1026',c:'NL',sector:'E&U',acct:'Zuid Water Board',cat:'Sustainability Announcements',rel:'Medium',title:'Net-zero grid investment roadmap published',src:'Sustainability report',date:'04 Aug 2026',
+   hyp:'Sustainability roadmap may create data, reporting, asset optimisation and cloud opportunities over a multi-year horizon.',
+   agents:['Researcher','Nexus','Market Intel in a Box'],action:'Save intelligence and map to the sustainability campaign',sc:{acct:76,ind:72,str:56,camp:65,pipe:70,cred:80}},
+  {id:'SIG-1024',c:'DE',sector:'TMT',acct:'BavariaTech GmbH',cat:'Organisational Resizing',rel:'High',title:'Shared services consolidation and workforce resizing programme announced',src:'Company update',date:'03 Aug 2026',
+   hyp:'Resizing programme may drive outsourcing, automation and operating model transformation needs.',
+   agents:['Financial Analyst','Intelio','Spend Scout'],action:'Launch Financial Analyst and prepare an automation play',sc:{acct:84,ind:80,str:82,camp:79,pipe:78,cred:83}},
+  {id:'SIG-1022',c:'NL',sector:'CPG',acct:'Rotterdam FoodCo',cat:'Strategic Initiatives',rel:'Critical',title:'Tender published to consolidate application support vendors',src:'Public tender',date:'02 Aug 2026',
+   hyp:'Open tender to consolidate five application support vendors into one, closing in five weeks. Direct match for the Vendor Consolidation play.',
+   agents:['Intelio','Researcher','Knowledge SPOC'],action:'Add to the NL cost-takeout campaign and start pre-tender positioning',sc:{acct:95,ind:84,str:96,camp:91,pipe:84,cred:90}},
+  {id:'SIG-1019',c:'DE',sector:'Retail',acct:'Munich Retail Group',cat:'Strategic Initiatives',rel:'High',title:'Incumbent SI contract expires Q1 2027',src:'Public filings',date:'01 Aug 2026',
+   hyp:'Five-year competitor contract ends Q1 2027; procurement typically starts nine months ahead, so the positioning window opens now.',
+   agents:['Researcher','Intelio','Market Intel in a Box'],action:'Open a pre-tender positioning plan and assign the account owner',sc:{acct:87,ind:85,str:80,camp:80,pipe:82,cred:85}},
+  {id:'SIG-1017',c:'DE',sector:'E&U',acct:'NordChem',cat:'Sustainability Announcements',rel:'Medium',title:'New EU emissions reporting obligation from 2027',src:'Regulatory monitor',date:'31 Jul 2026',
+   hyp:'Reporting obligation requires plant-level data consolidation — extends the existing data platform engagement.',
+   agents:['Researcher','Nexus'],action:'Save to account intelligence and brief the existing delivery team',sc:{acct:74,ind:72,str:60,camp:65,pipe:69,cred:90}},
+  {id:'SIG-1015',c:'NL',sector:'Manufacturing',acct:'Eindhoven Devices BV',cat:'Technology Initiatives',rel:'High',title:'Hiring 25+ SAP and integration engineers',src:'Hiring sites',date:'30 Jul 2026',
+   hyp:'Concentrated SAP hiring suggests an S/4 programme being staffed internally — positioning window for a managed alternative.',
+   agents:['Intelio','Nexus','Knowledge SPOC'],action:'Launch Intelio and prepare an SAP opportunity hypothesis',sc:{acct:79,ind:70,str:65,camp:70,pipe:70,cred:75}},
+  {id:'SIG-1013',c:'SE',sector:'Manufacturing',acct:'Nordic Steel AB',cat:'Technology Initiatives',rel:'Critical',title:'RFI issued for an OT/IT integration partner',src:'Public tender',date:'29 Jul 2026',
+   hyp:'RFI closes in three weeks. Direct fit for the Siemens Smart Factory Accelerator partner play.',
+   agents:['Intelio','Nexus','Knowledge SPOC'],action:'Trigger the partner play and assign a solution architect',sc:{acct:89,ind:82,str:90,camp:85,pipe:81,cred:85}},
+  {id:'SIG-1011',c:'SE',sector:'Retail',acct:'Vasa Retail AB',cat:'Technology Initiatives',rel:'Medium',title:'Commerce platform outage reported in the trade press',src:'News sources',date:'28 Jul 2026',
+   hyp:'Public platform instability creates a credible reason to open a commerce resilience conversation.',
+   agents:['Researcher','Nexus'],action:'Save to account intelligence and prepare a resilience talk track',sc:{acct:70,ind:62,str:75,camp:68,pipe:62,cred:70}},
+  {id:'SIG-1009',c:'FI',sector:'Life Sciences',acct:'Helsinki HealthTech',cat:'Strategic Initiatives',rel:'Low',title:'EU MDR compliance deadline approaching',src:'Regulatory monitor',date:'27 Jul 2026',
+   hyp:'Compliance-driven data and quality-system work; smaller ticket but a credible door-opener.',
+   agents:['Researcher','Knowledge SPOC'],action:'Save to account intelligence for the next campaign wave',sc:{acct:68,ind:52,str:80,camp:69,pipe:56,cred:90}},
+  {id:'SIG-1007',c:'NO',sector:'E&U',acct:'Fjord Energy ASA',cat:'Technology Initiatives',rel:'High',title:'Signs a strategic cloud agreement with a hyperscaler',src:'Press release',date:'26 Jul 2026',
+   hyp:'Commitment made, capability not yet built — immediate landing-zone and managed-service opportunity.',
+   agents:['Intelio','Nexus','Knowledge SPOC'],action:'Launch the AWS Landing Zone Fast Start partner play',sc:{acct:86,ind:80,str:76,camp:78,pipe:78,cred:85}},
+  {id:'SIG-1005',c:'DK',sector:'Transport',acct:'Copenhagen Logistics',cat:'Executive Changes',rel:'Medium',title:'Recruiting a Head of Enterprise Architecture',src:'Hiring sites',date:'25 Jul 2026',
+   hyp:'A senior EA hire usually precedes a modernisation mandate. Time outreach for 60\u201390 days after the appointment.',
+   agents:['Rapport','Stakeholder Profile','LinkedIn CXO Voice'],action:'Set a follow-up reminder and prepare a stakeholder profile',sc:{acct:72,ind:65,str:58,camp:63,pipe:65,cred:75}},
+  {id:'SIG-1003',c:'NL',sector:'Transport',acct:'Van Oord Logistics',cat:'Organisational Resizing',rel:'Medium',title:'Announces a shared-services review across back office and IT',src:'Company update',date:'24 Jul 2026',
+   hyp:'Shared-services review is a standard precursor to outsourcing and automation decisions.',
+   agents:['Financial Analyst','Intelio'],action:'Assign to the account owner and prepare an outsourcing hypothesis',sc:{acct:75,ind:68,str:70,camp:70,pipe:67,cred:80}},
+  {id:'SIG-1001',c:'DK',sector:'CPG',acct:'Jutland Foods',cat:'M&A / Acquisitions',rel:'High',title:'Acquires a regional competitor',src:'Market news',date:'23 Jul 2026',
+   hyp:'Post-merger integration typically creates ERP, application rationalisation and data consolidation demand within two quarters.',
+   agents:['Financial Analyst','Researcher','Intelio'],action:'Create a PMI hypothesis and add to the Nordics modernization campaign',sc:{acct:81,ind:83,str:78,camp:76,pipe:78,cred:86}},
+  {id:'SIG-0998',c:'UK',sector:'CPG',acct:'Albion Foods',cat:'Financial Updates',rel:'High',title:'Issues a margin pressure warning in a trading update',src:'Financial update',date:'22 Jul 2026',
+   hyp:'Named IT and logistics as the two cost levers — strong opening for IT cost takeout ahead of FY planning.',
+   agents:['Financial Analyst','Spend Scout'],action:'Create a cost-takeout play and request a CFO conversation',sc:{acct:88,ind:79,str:82,camp:82,pipe:79,cred:92}},
+];
+
+const AGENT_STAGES=[
+  {k:'Client intelligence',ic:'\U0001F50E',sub:'Account understanding, BuyerMaps, stakeholder context and market intelligence'},
+  {k:'Meeting preparation',ic:'\U0001F4CB',sub:'Briefing, conversation preparation and relevant talking points'},
+  {k:'Opportunity qualification',ic:'\u2705',sub:'Trigger assessment, financial signals, qualification and risk view'},
+  {k:'Origination & shaping',ic:'\U0001F9E9',sub:'Solution shaping, pre-tender positioning, innovation and competitive intelligence'},
+  {k:'RFP / bid support',ic:'\U0001F4C4',sub:'RFP analysis, bid support, proposal development and review'},
+  {k:'Campaign support',ic:'\U0001F4E3',sub:'Campaign targeting, outreach, content, assets and follow-up support'},
+];
+/* n = agent, st = lifecycle stage, d = what it does, u = best used for, own = owning team */
+const AGENTS=[
+  {n:'Intelio',st:'Client intelligence',own:'Clients & Innovation',d:'Creates a 360-degree client intelligence view including business context, sector trends, financials, technology priorities and opportunity hypotheses.',u:'Account planning, first outreach, meeting preparation and opportunity shaping.',launches:64},
+  {n:'BritMap',st:'Client intelligence',own:'Clients & Innovation',d:'Builds UK-focused BuyerMaps, decision-maker context, business priorities and likely opportunity areas.',u:'UK mid-market account intelligence and targeted sales engagement.',launches:22},
+  {n:'Helder',st:'Client intelligence',own:'Clients & Innovation',d:'Creates concise BuyerMaps for Netherlands mid-market clients including likely decision-makers, buying triggers and tailored talking points.',u:'Netherlands teams preparing account meetings.',launches:18},
+  {n:'Rapport',st:'Client intelligence',own:'Clients & Innovation',d:'Builds stakeholder intelligence profiles with priorities, talking points, discovery questions and engagement approaches.',u:'Preparing for senior stakeholder conversations.',launches:37},
+  {n:'Stakeholder Profile',st:'Client intelligence',own:'Clients & Innovation',d:'Structures stakeholder profiles from public and contextual inputs, helping teams understand priorities and prepare outreach.',u:'Account or bid stakeholder mapping.',launches:15},
+  {n:'LinkedIn CXO Voice',st:'Client intelligence',own:'Clients & Innovation',d:'Decodes leadership activity and public CXO voice to identify themes, priorities and possible engagement angles.',u:'When leadership signals or executive changes are identified.',launches:26},
+  {n:'Market Intel in a Box',st:'Client intelligence',own:'Clients & Innovation',d:'Generates executive-ready market intelligence, client briefings and strategic insights with a Nordics lens.',u:'Leadership-ready account and market briefings.',launches:29},
+  {n:'Intelio',st:'Meeting preparation',own:'Clients & Innovation',d:'Creates meeting-ready client intelligence and links client challenges to relevant Capgemini capabilities.',u:'Before first meetings or account reviews.',launches:64},
+  {n:'BritMap',st:'Meeting preparation',own:'Clients & Innovation',d:'Turns UK account intelligence into practical outreach ideas, conversation starters and positioning themes.',u:'Before client meetings or industry events.',launches:22},
+  {n:'Rapport',st:'Meeting preparation',own:'Clients & Innovation',d:'Recommends tailored talking points, opening lines and discovery questions for specific stakeholders.',u:'Before CXO or stakeholder meetings.',launches:37},
+  {n:'Knowledge SPOC',st:'Meeting preparation',own:'Knowledge Management',d:'Finds the most relevant capability decks, case studies, sales kits and internal guidance for a client discussion.',u:'Preparing meeting materials or proof points.',launches:51},
+  {n:'Market Intel in a Box',st:'Meeting preparation',own:'Clients & Innovation',d:'Provides macro, industry and competitive context for leadership conversations.',u:'Executive or senior stakeholder discussions.',launches:29},
+  {n:'Beacon',st:'Opportunity qualification',own:'Clients & Innovation',d:'Identifies and scores buying signals using public data and a structured taxonomy.',u:'Validating whether a trigger is commercially meaningful.',launches:33},
+  {n:'Triggers Orchestrator',st:'Opportunity qualification',own:'Clients & Innovation',d:'Processes trigger lists and files, categorises signals and applies regional governance rules.',u:'When batches of trigger signals need to be standardised.',launches:12},
+  {n:'Financial Analyst',st:'Opportunity qualification',own:'Clients & Innovation',d:'Analyses financial stress and maps distress signals to IT services opportunities such as cost optimisation and transformation.',u:'Financial updates, margin pressure or restructuring signals.',launches:44},
+  {n:'Spend Scout',st:'Opportunity qualification',own:'Clients & Innovation',d:'Identifies where clients may invest by analysing market expectations, financials and company actions.',u:'Separating real opportunity from general market noise.',launches:20},
+  {n:'Sales TransFORM',st:'Opportunity qualification',own:'Sales Analytics Centre',d:'Explains sales pipeline, bookings, forecasting and governance rules using TransFORM guidance.',u:'Qualifying or progressing pipeline stages.',launches:17},
+  {n:'Deal Risk Sentinel',st:'Opportunity qualification',own:'Wincentre',d:'Surfaces commercial, delivery, compliance and governance risks across deals.',u:'Qualification, go/no-go and deal review.',launches:25},
+  {n:'Nexus',st:'Origination & shaping',own:'Clients & Innovation',d:'Identifies relevant recent innovations and turns them into client-ready value stories.',u:'Shaping innovation-led proposals and solution angles.',launches:39},
+  {n:'Researcher',st:'Origination & shaping',own:'Clients & Innovation',d:'Conducts deep research on competitors, markets, clients, partnerships and innovations with cited findings.',u:'Market and competitor research during shaping.',launches:47},
+  {n:'Horizon',st:'Origination & shaping',own:'Clients & Innovation',d:'Anticipates public-sector tender opportunities before formal publication using early market intelligence.',u:'Pre-tender positioning.',launches:14},
+  {n:'CompeteIQ',st:'Origination & shaping',own:'Clients & Innovation',d:'Builds competitor overview, positioning insights and compete strategy for Europe-focused pursuits.',u:'Strengthening differentiation and win themes.',launches:21},
+  {n:'GCC Advisor',st:'Origination & shaping',own:'Clients & Innovation',d:'Provides GCC market intelligence, talent and operating model insights.',u:'GCC-related advisory opportunities.',launches:8},
+  {n:'Beat The Competition',st:'Origination & shaping',own:'Clients & Innovation',d:'Creates competitive intelligence newsletters and market briefs for sales teams and leaders.',u:'Competitive monitoring and strategy.',launches:16},
+  {n:'RFx Shredder',st:'RFP / bid support',own:'Wincentre',d:'Extracts RFP and RFI requirements and identifies risks, gaps and evaluation criteria.',u:'Day one of a bid or tender review.',launches:46},
+  {n:'Bid Support Copilot',st:'RFP / bid support',own:'Wincentre',d:'Guides bid lifecycle activities, checklists, prompts, compliance and response support.',u:'Bid and presales teams during an RFx response.',launches:34},
+  {n:'Winplan Navigator',st:'RFP / bid support',own:'Wincentre',d:'Builds win strategy, value proposition, competitive positioning and customer insight.',u:'Pursuit strategy and win planning.',launches:28},
+  {n:'Deal Risk Sentinel',st:'RFP / bid support',own:'Wincentre',d:'Provides deal risk posture and escalation insights.',u:'Before deal reviews and approvals.',launches:25},
+  {n:'RedTeam Review',st:'RFP / bid support',own:'Wincentre',d:'Critically reviews tender and bid content from business, solution and client perspectives.',u:'Before formal proposal review.',launches:19},
+  {n:'Cognitive Review',st:'RFP / bid support',own:'Wincentre',d:'Reviews proposals for clarity, logic, trust, empathy and decision effectiveness.',u:'Sharpening executive-ready proposal content.',launches:13},
+  {n:'Proposal Matcher',st:'RFP / bid support',own:'Proposal Centre',d:'Compares RFx requirements with proposal content and highlights match scores, gaps and strengths.',u:'Validating proposal fit against customer requirements.',launches:23},
+  {n:'Final Checker',st:'RFP / bid support',own:'Proposal Centre',d:'Checks RFP responses for consistency, grammar, formatting, compliance and issue severity.',u:'Before submission.',launches:30},
+  {n:'Proposal Development',st:'RFP / bid support',own:'Proposal Centre',d:'Creates structured proposal documents, sections and subsections from RFP content.',u:'Accelerating drafting.',launches:26},
+  {n:'FAQ / Response Draft \u2013 UK',st:'RFP / bid support',own:'Wincentre',d:'Finds standard responses and bid essentials from approved UK knowledge sources.',u:'Questionnaires, FAQs and standard response drafting.',launches:11},
+  {n:'Knowledge SPOC',st:'Campaign support',own:'Knowledge Management',d:'Finds relevant collateral, case studies, offer materials, playbooks and internal guidance.',u:'Building campaign assets or follow-up materials.',launches:51},
+  {n:'Market Intel in a Box',st:'Campaign support',own:'Clients & Innovation',d:'Provides executive-ready industry and market insights to support campaign narratives.',u:'Campaign positioning and market context.',launches:29},
+  {n:'Spend Scout',st:'Campaign support',own:'Clients & Innovation',d:'Supports investment hypotheses and identifies likely spending areas.',u:'Campaign targeting and account prioritisation.',launches:20},
+  {n:'Nexus',st:'Campaign support',own:'Clients & Innovation',d:'Maps innovations to client priorities and campaign themes.',u:'Innovation-led campaign plays.',launches:39},
+  {n:'BritMap',st:'Campaign support',own:'Clients & Innovation',d:'Creates UK buyer insights, target account angles and engagement prompts.',u:'UK campaign account preparation.',launches:22},
+  {n:'Beat The Competition',st:'Campaign support',own:'Clients & Innovation',d:'Monitors competitor strategies, wins, partnerships and market moves.',u:'Competitive campaign angles.',launches:16},
+];
+const AGENT_TEAMS=['Clients & Innovation','Knowledge Management','Wincentre','Proposal Centre','Sales Analytics Centre'];
+
+const GOV=[
+  {t:'Call',n:'SBU MM Factory Steering',cad:'Quarterly',scope:'SBU',next:'02 Oct 2026',chair:'SBU Factory Leader'},
+  {t:'Call',n:'Country / BU GTM Squad',cad:'Monthly',scope:'Country',next:'02 Sep 2026',chair:'Country MM Leader'},
+  {t:'Call',n:'Deal & Solutions Review',cad:'Weekly',scope:'Country',next:'14 Aug 2026',chair:'BU Factory Leader'},
+];
+const GOV_ACTIONS=[
+  {a:'Refine executive dashboard structure, metrics and drill-downs',o:'Megharani B',d:'22 Aug',s:'Open'},
+  {a:'Define target account intake — upload vs form vs both',o:'Sheethal Prasad / Mouryamayee Souryatanaya',d:'20 Aug',s:'Closed 11 Aug — both'},
+  {a:'Campaign Builder requirements and status flow',o:'Samyak Gaur',d:'22 Aug',s:'Closed 11 Aug'},
+  {a:'Assess Client Watch for mid-market client scanning',o:'Vikas Rajak',d:'27 Aug',s:'Open'},
+  {a:'Map Copilot/TLC agents to lifecycle stages with descriptions',o:'Vikas Rajak',d:'20 Aug',s:'Closed 11 Aug'},
+  {a:'Build cross-module data flow map',o:'Core team',d:'18 Aug',s:'Open'},
+  {a:'Define common nomenclature and code lists',o:'Data model owner',d:'25 Aug',s:'Open'},
+  {a:'Classify every feature MVP / Phase 1 / Phase 2',o:'All workstream owners',d:'15 Aug',s:'Open'},
+  {a:'Confirm Thor vs Salesforce integration mechanism',o:'Sheethal Prasad / Vijay Kaulgud',d:'29 Aug',s:'Open'},
+  {a:'Confirm LLM & hosting for radar processing; design the RAG layer once',o:'Vikas Rajak / Architecture',d:'Before radar build',s:'Open'},
+  {a:'Confirm campaign → Thor mapping for bookings and revenue won',o:'Samyak Gaur / Sheethal Prasad',d:'Before metrics build',s:'Open'},
+  {a:'Confirm final Thor / Salesforce field names against sample datasets',o:'Mourya + technical team',d:'Before freeze',s:'Open'},
+  {a:'Confirm agent access requirements per catalogue entry',o:'Vikas Rajak',d:'MVP content',s:'Open'},
+];
+
+/* ---------------- Scope handling ---------------- */
+let scope = {type:'country', code:'NL'};
+function buildScopeSelect(){
+  const s=document.getElementById('scope');
+  s.innerHTML =
+    '<optgroup label="Country">'+COUNTRIES.map(c=>`<option value="c:${c.code}">${c.name}</option>`).join('')+'</optgroup>'+
+    '<optgroup label="BU roll-up">'+BUS.map(b=>`<option value="b:${b}">${b} (BU)</option>`).join('')+'</optgroup>'+
+    '<optgroup label="SBU"><option value="s:NCE">NCE — all countries</option></optgroup>';
+  s.value='c:NL';
+  s.onchange=()=>{const[v,k]=s.value.split(':');scope={type:v==='c'?'country':v==='b'?'bu':'sbu',code:k};render();};
+}
+function scopeCountries(){
+  if(scope.type==='country') return [scope.code];
+  if(scope.type==='bu') return COUNTRIES.filter(c=>c.bu===scope.code).map(c=>c.code);
+  return COUNTRIES.map(c=>c.code);
+}
+function scopeLabel(){
+  if(scope.type==='country') return COUNTRIES.find(c=>c.code===scope.code).name;
+  if(scope.type==='bu') return scope.code+' (BU roll-up)';
+  return 'NCE — SBU roll-up';
+}
+function inScope(c){return scopeCountries().includes(c);}
+function agg(){
+  const cs=scopeCountries(); const keys=Object.keys(KPI.NL);
+  const o={}; keys.forEach(k=>o[k]=cs.reduce((a,c)=>a+KPI[c][k],0));
+  ['coverage','reuse','tCoverage'].forEach(k=>o[k]=Math.round(cs.reduce((a,c)=>a+KPI[c][k],0)/cs.length));
+  o.agents=uniqueAgents().length; // one shared launchpad across NCE
+  return o;
+}
+
+/* ---------------- Nav ---------------- */
+const NAV=[
+  {id:'dashboard',label:'Dashboard',ico:'📊'},
+  {id:'pipeline',label:'Pipeline Explorer',ico:'🎯'},
+  {id:'campaigns',label:'Campaigns',ico:'📣'},
+  {id:'solutions',label:'Solutions & Assets',ico:'🧱'},
+  {id:'radar',label:'Triggers Radar',ico:'📡'},
+  {id:'agents',label:'Smart Agents',ico:'🤖'},
+];
+let current='dashboard';
+let subview={};
+function buildNav(){
+  const nav=document.getElementById('nav');
+  nav.innerHTML='<div class="sect">Factory</div>'+NAV.map(n=>
+    `<a data-id="${n.id}" class="${n.id===current?'active':''}"><span class="ico">${n.ico}</span>${n.label}</a>`).join('');
+  nav.querySelectorAll('a').forEach(a=>a.onclick=()=>{current=a.dataset.id;buildNav();render();});
+}
+function go(id,sub){current=id;if(sub)subview[id]=sub;buildNav();render();window.scrollTo(0,0);}
+
+/* ---------------- Render ---------------- */
+function render(){
+  document.getElementById('ptitle').textContent=NAV.find(n=>n.id===current).label;
+  document.getElementById('asof').textContent='🕒 '+AS_OF;
+  const v=document.getElementById('view');
+  const banner='<div class="banner">⚠️ Interactive prototype with illustrative mock data — demonstrates the v3.1 specification (15 Sept 2026). Not a live system.</div>';
+  v.innerHTML=banner+(VIEWS[current]?VIEWS[current]():'');
+  if(afterRender[current]) afterRender[current]();
+}
+const afterRender={};
+const VIEWS={};
+const esc=o=>JSON.stringify(o).replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+
+/* =========================== DASHBOARD =========================== */
+function ring(pct,color){
+  const r=24,cx=29,cy=29,circ=2*Math.PI*r,off=circ*(1-Math.min(pct,100)/100);
+  return `<svg class="ring" viewBox="0 0 58 58"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e9eef4" stroke-width="7"/>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
+   stroke-dasharray="${circ}" stroke-dashoffset="${off}" transform="rotate(-90 ${cx} ${cy})"/>
+  <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="13" font-weight="700" fill="#12233f">${pct}%</text></svg>`;
+}
+VIEWS.dashboard=()=>{
+  const k=agg();
+  const bookPct=Math.round(k.bookings/k.tBookings*100);
+  const pipePct=Math.round(k.pipeline/k.tPipeline*100);
+  const covPct=Math.round(k.coverage/k.tCoverage*100);
+  const col=p=>p>=90?'#2a9d5c':p>=70?'#e08b00':'#d1394b';
+  const cs=scopeCountries();
+  const byCountry=cs.map(c=>({c,name:COUNTRIES.find(x=>x.code===c).name,b:KPI[c].bookings,p:KPI[c].pipeline}));
+  const maxB=Math.max(...byCountry.map(x=>x.b));
+  return `
+  <div class="flex between wrapf mb">
+    <div><h2 class="page">${scopeLabel()} — Mid-Market Factory snapshot</h2>
+    <p class="sub" style="margin:2px 0 0">Leadership view · actuals vs quarterly targets · every tile drills into its module</p></div>
+    <div class="legend">Figures illustrative · ${AS_OF}</div>
+  </div>
+
+  <div class="dashgrid">
+    <!-- Clients -->
+    <div class="tile" style="grid-column:span 7" onclick="go('pipeline','prospects')">
+      <div class="drill">Open Pipeline Explorer →</div>
+      <div class="th"><div class="ti" style="background:var(--primary)">👥</div><div class="tt">Clients</div></div>
+      <div class="metricrow">
+        <div><div class="big">~${k.clients}</div><div class="lab">Total mid-market clients</div></div>
+        <div><div class="big">${k.target}</div><div class="lab">Target accounts</div></div>
+        <div><div class="big">${k.active}</div><div class="lab">Targeted / active accounts</div></div>
+        <div><div class="big">${k.meetings}</div><div class="lab">Client meetings generated</div></div>
+      </div>
+      <div class="att"><span class="badge b-blue">Coverage ${k.coverage}%</span> vs target ${k.tCoverage}% · ${k.qleads} qualified leads this quarter</div>
+    </div>
+
+    <!-- Pipeline & Opportunity Explorer -->
+    <div class="tile" style="grid-column:span 5" onclick="go('pipeline','prospects')">
+      <div class="drill">Open prospect pipeline →</div>
+      <div class="th"><div class="ti" style="background:var(--navy2)">🧭</div><div class="tt">Pipeline &amp; Opportunity Explorer</div></div>
+      <div class="flex between">
+        <div><div class="big">${money(k.bookings)}</div><div class="lab">Bookings influenced</div>
+          <div class="mt6"><span class="muted" style="font-size:12px">Qualified pipeline <b>${money(k.pipeline)}</b></span></div></div>
+        ${ring(bookPct,col(bookPct))}
+      </div>
+      <div class="att">Target ${money(k.tBookings)} bookings · ${money(k.tPipeline)} pipeline</div>
+    </div>
+
+    <!-- Campaigns -->
+    <div class="tile" style="grid-column:span 4" onclick="go('campaigns','calendar')">
+      <div class="drill">Open →</div>
+      <div class="th"><div class="ti" style="background:var(--teal)">📣</div><div class="tt">Campaigns</div></div>
+      <div class="big">${k.campaigns}</div><div class="lab"># Active campaigns</div>
+      <div class="att">${CAMPAIGNS.filter(c=>inScope(c.c)).length} total in scope · campaign calendar &amp; builder available</div>
+    </div>
+
+    <!-- Partner plays -->
+    <div class="tile" style="grid-column:span 4" onclick="go('solutions','partners')">
+      <div class="drill">Open →</div>
+      <div class="th"><div class="ti" style="background:var(--amber)">🤝</div><div class="tt">Partner Plays</div></div>
+      <div class="big">${PARTNER_PLAYS.filter(p=>p.st==='Active'&&p.cty.some(inScope)).length}</div><div class="lab"># Active partner plays</div>
+      <div class="att">${money(PARTNER_PLAYS.filter(p=>p.cty.some(inScope)).reduce((a,b)=>a+b.pipe,0))} partner-influenced pipeline</div>
+    </div>
+
+    <!-- Solutions & assets -->
+    <div class="tile" style="grid-column:span 4" onclick="go('solutions','assets')">
+      <div class="drill">Open →</div>
+      <div class="th"><div class="ti" style="background:var(--primary)">💡</div><div class="tt">Solutions &amp; Assets</div></div>
+      <div class="big">${k.assets}</div><div class="lab"># Key assets across Business Lines</div>
+      <div class="att">${SOLUTIONS.filter(s=>s.mat!=="Draft").length} published solutions · ${k.reuse}% industrialized (reuse of certified assets)</div>
+    </div>
+
+    <!-- Radar -->
+    <div class="tile" style="grid-column:span 6" onclick="go('radar','feed')">
+      <div class="drill">Open →</div>
+      <div class="th"><div class="ti" style="background:var(--primary-d)">📡</div><div class="tt">Triggers Radar</div></div>
+      <div class="flex between">
+        <div><div class="big">${k.triggers}</div><div class="lab"># Market triggers covered this quarter</div></div>
+        <div style="text-align:right">
+          <div><span class="badge b-red">${SIGNALS.filter(s=>inScope(s.c)&&s.rel==='Critical').length} critical</span></div>
+          <div class="mt6"><span class="badge b-amber">${SIGNALS.filter(s=>inScope(s.c)&&s.rel==='High').length} high</span></div>
+        </div>
+      </div>
+      <div class="att">${TRIGGER_CATS.length} vertical trigger categories · ${SIGNALS.filter(s=>inScope(s.c)).length} open signals awaiting action · daily ingestion</div>
+    </div>
+
+    <!-- Agents -->
+    <div class="tile" style="grid-column:span 6" onclick="go('agents')">
+      <div class="drill">Open launchpad →</div>
+      <div class="th"><div class="ti" style="background:var(--pink)">🤖</div><div class="tt">Smart Agents</div></div>
+      <div class="flex between">
+        <div><div class="big">${uniqueAgents().length}</div><div class="lab"># Copilot / TLC agents on the launchpad</div></div>
+        <div style="text-align:right"><div class="big" style="font-size:22px">${uniqueAgents().reduce((a,n)=>a+AGENTS.find(x=>x.n===n).launches,0)}</div>
+        <div class="lab">launches this quarter<br><span class="badge b-gray">approximation</span></div></div>
+      </div>
+      <div class="att">${AGENT_STAGES.length} lifecycle stages · agents run in Copilot/TLC — utilization is approximated from launch clicks (MVP)</div>
+    </div>
+  </div>
+
+  <div class="row mt">
+    <div class="card" style="flex:1;min-width:330px"><h3>Bookings influenced by country (€M)</h3>
+      ${byCountry.map(x=>`<div class="mb"><div class="flex between" style="font-size:12.5px"><span>${x.name}</span><span class="muted">${money(x.b)}</span></div>
+      <div class="bar"><i style="width:${x.b/maxB*100}%"></i></div></div>`).join('')}
+      <div class="legend mt">Country is the primary grain; BU and SBU are roll-ups.</div>
+    </div>
+    <div class="card" style="flex:1;min-width:290px"><h3>Attainment vs quarterly target</h3>
+      ${[['Bookings influenced',bookPct],['Qualified pipeline',pipePct],['Coverage',covPct]].map(a=>`
+        <div class="mb"><div class="flex between" style="font-size:12.5px"><span>${a[0]}</span><span class="muted">${a[1]}%</span></div>
+        <div class="bar"><i style="width:${Math.min(a[1],100)}%;background:${col(a[1])}"></i></div></div>`).join('')}
+      <div class="legend mt">MVP shows attainment only. Month-on-month and quarter-on-quarter trends are deferred until enough history exists (spec 05, 14).</div>
+    </div>
+  </div>`;
+};
+
+/* =========================== PIPELINE EXPLORER (v3.0) =========================== */
+/* One connected view: pre-Thor prospect pipeline + Thor-backed opportunity view. */
+const FUNNEL=[
+  ['Prospect identified','DISCOVER'],['Research &amp; qualification','QUALIFY'],['Campaign engagement','ENGAGE'],
+  ['Qualified lead','VALIDATE'],['Opportunity created in Thor','CONVERT'],['Opportunity management','ADVANCE'],['Won / Lost','OUTCOME']];
+let oppMode='compact';
+VIEWS.pipeline=()=>{
+  const tab=subview.pipeline||'prospects';
+  return `<h2 class="page">Pipeline Explorer</h2>
+  <p class="sub">Factory-created prospect pipeline \u2014 searchable, filterable and editable up to the point of conversion into Thor</p>
+  <div class="tabs" id="ptabs">
+    <button data-t="prospects" class="${tab==='prospects'?'active':''}">Prospect pipeline</button>
+    <button data-t="intake" class="${tab==='intake'?'active':''}">Target prospects intake</button>
+    <button data-t="data" class="${tab==='data'?'active':''}">Master list, integration &amp; mapping</button>
+  </div>
+  <div id="pbody"></div>`;
+};
+afterRender.pipeline=()=>{
+  const tabs=document.getElementById('ptabs'),body=document.getElementById('pbody');
+  const F={prospects:prospectsView,intake:intakeView,data:dataView};
+  const draw=(t)=>{subview.pipeline=t;body.innerHTML=(F[t]||prospectsView)();};
+  draw(subview.pipeline&&F[subview.pipeline]?subview.pipeline:'prospects');
+  tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');draw(b.dataset.t);});
+};
+/* ---- Prospect pipeline v3.1 (15 Sept 2026): search, filters and inline edit ---- */
+let prospectFilter={q:'',st:'All',year:'All',quarter:'All'};
+function setPF(k,v){prospectFilter[k]=v;document.getElementById('pbody').innerHTML=prospectsView();
+  if(k==='q'){const el=document.getElementById('psearch');if(el){el.focus();el.setSelectionRange(v.length,v.length);}}}
+function clearPF(){prospectFilter={q:'',st:'All',year:'All',quarter:'All'};document.getElementById('pbody').innerHTML=prospectsView();}
+function signParts(p){const x=(p.sign||'').split('-');return {q:x[0]||'',y:x[1]||''};}
+function prospectMatch(p){
+  const f=prospectFilter, sp=signParts(p);
+  if(f.st!=='All' && PSTAGES[p.st]!==f.st) return false;
+  if(f.year!=='All' && sp.y!==f.year) return false;
+  if(f.quarter!=='All' && sp.q!==f.quarter) return false;
+  if(f.q && !((p.n+' '+p.id+' '+p.ind+' '+p.own+' '+p.src+' '+p.bl).toLowerCase().includes(f.q.toLowerCase()))) return false;
+  return true;
+}
+function prospectsView(){
+  const scoped=PROSPECTS.filter(p=>inScope(p.c));
+  const list=scoped.filter(prospectMatch);
+  const years=[...new Set(scoped.map(p=>signParts(p).y))].filter(Boolean).sort();
+  const quarters=['Q1','Q2','Q3','Q4'];
+  const f=prospectFilter;
+  const active=f.q||f.st!=='All'||f.year!=='All'||f.quarter!=='All';
+  return `<div class="flex between wrapf mb">
+    <div class="muted">${list.length} of ${scoped.length} prospects in scope \u00b7 <span class="badge b-blue">${list.filter(p=>p.st===5).length} qualified leads</span> ready for Thor Stage 2</div>
+    <div><button class="btn sm ghost" onclick="openSellerInput()">\u270E Log an interaction</button>
+    <button class="btn sm" onclick="newProspect()">+ New prospect</button></div>
+  </div>
+  <div class="card mb"><div class="flex wrapf" style="gap:8px;align-items:center">
+    <input class="t" id="psearch" style="width:auto;flex:1;min-width:250px" placeholder="\u2315 Search company, prospect ID, industry, seller or trigger\u2026" value="${f.q}" oninput="setPF('q',this.value)">
+    <select class="t" style="width:auto" onchange="setPF('st',this.value)">
+      <option value="All">Status: all</option>
+      ${PSTAGES.map(x=>`<option ${f.st===x?'selected':''}>${x}</option>`).join('')}</select>
+    <select class="t" style="width:auto" onchange="setPF('year',this.value)">
+      <option value="All">Year: all</option>
+      ${years.map(y=>`<option ${f.year===y?'selected':''}>${y}</option>`).join('')}</select>
+    <select class="t" style="width:auto" onchange="setPF('quarter',this.value)">
+      <option value="All">Quarter: all</option>
+      ${quarters.map(q=>`<option ${f.quarter===q?'selected':''}>${q}</option>`).join('')}</select>
+    ${active?`<button class="btn sm gray" onclick="clearPF()">Clear filters</button>`:''}
+  </div>
+  <div class="legend mt6">Year and quarter filter on the expected signing period. Search runs across the prospect master; filters and search combine.</div></div>
+  <div class="kanban mb">${PSTAGES.map((st,i)=>`<div class="kcol"><h4>${st}<br><span style="color:#94a3b8">${list.filter(p=>p.st===i).length}</span></h4>
+    ${list.filter(p=>p.st===i).map(p=>`<div class="kcard" onclick="openProspect('${p.id}')">
+      <b>${p.n}</b><span class="muted" style="font-size:10.5px">${p.id}</span>
+      <div class="mt6"><span class="chip" style="font-size:10px">${money(p.tcv)}</span><span class="chip" style="font-size:10px">${p.sign}</span></div></div>`).join('')||'<div class="muted" style="font-size:11px">\u2014</div>'}
+  </div>`).join('')}</div>
+  <div class="card" style="padding:0">
+  <div style="padding:12px 14px;border-bottom:1px solid var(--line)"><b style="font-size:13px">Prospect list</b>
+  <span class="legend"> \u2014 the key fields (spec 12 \u00a71.1). Everything else lives behind the drill-down. Click a row to open, or Edit to amend.</span></div>
+  <div style="overflow-x:auto"><table><thead><tr>
+    <th>Prospect ID</th><th>Company name</th><th>Industry</th><th>Target bookings</th><th>Status / stage</th><th>Expected sign</th><th>Assigned seller</th><th>Trigger</th><th>Campaign</th><th>BU</th><th></th></tr></thead><tbody>
+  ${list.map(p=>`<tr class="clk" onclick="openProspect('${p.id}')">
+    <td><code style="font-size:11px">${p.id}</code></td><td><b>${p.n}</b></td><td>${p.ind}</td><td>${money(p.tcv)}</td>
+    <td><span class="badge ${p.st>=5?'b-green':p.st>=3?'b-teal':'b-gray'}">${PSTAGES[p.st]}</span></td>
+    <td>${p.sign}</td>
+    <td>${p.own}</td><td class="muted">${p.src==='Radar trigger'?'\U0001F4E1 Radar':p.src}</td>
+    <td class="muted">${(CAMPAIGNS.find(c=>c.c===p.c&&c.status==='Active')||{n:'\u2014'}).n.split('\u2014').pop().trim()}</td>
+    <td>${COUNTRIES.find(c=>c.code===p.c).bu}</td>
+    <td><button class="btn sm ghost" onclick="event.stopPropagation();editProspect('${p.id}')">\u270E Edit</button></td></tr>`).join('')||'<tr><td colspan="11" class="muted">No prospects match the current search and filters.</td></tr>'}
+  </tbody></table></div></div>`;
+}
+/* ---- Edit prospect (mandated fields locked) ---- */
+const LOCKED_PROSPECT_FIELDS=['Prospect ID','Company name','Country / BU','Source / trigger'];
+function editProspect(id){
+  const p=PROSPECTS.find(x=>x.id===id); if(!p) return;
+  const cty=COUNTRIES.find(c=>c.code===p.c);
+  if(p.st===6){ drawer('Edit prospect \u2014 '+p.n,`<code>${p.id}</code> <span class="badge b-gray">Read-only</span>`,
+    `<div class="banner" style="background:#eef4fa;border-color:#cde3f0;color:#0b4a6f">\u2139\uFE0F This prospect has been converted to a CRM opportunity. The prospect record is read-only from conversion onwards; the pre-Thor history is retained against the account (spec 12 \u00a71.1).</div>`); return; }
+  drawer('Edit prospect \u2014 '+p.n,`<code>${p.id}</code> <span class="badge b-amber">Editing</span> <span class="muted">${cty.name}</span>`,`
+  <div class="card mb" style="background:#f7f9fb"><b style="font-size:12.5px">\U0001F512 Mandated fields cannot be edited</b>
+  <div class="legend mt6">${LOCKED_PROSPECT_FIELDS.join(' \u00b7 ')} come from the master prospect record and the intake route. Changing them requires a master-data change request, not an in-line edit.</div></div>
+  <div class="f2">
+    <div><label class="fl">Prospect ID \U0001F512</label><input class="t" value="${p.id}" disabled></div>
+    <div><label class="fl">Company name \U0001F512</label><input class="t" value="${p.n}" disabled></div>
+    <div><label class="fl">Country / BU \U0001F512</label><input class="t" value="${cty.name} \u00b7 ${cty.bu}" disabled></div>
+    <div><label class="fl">Source / trigger \U0001F512</label><input class="t" value="${p.src}" disabled></div>
+    <div><label class="fl">Industry</label><input class="t" id="ep_ind" value="${p.ind}"></div>
+    <div><label class="fl">Business line</label><select class="t" id="ep_bl">${BLS.map(b=>`<option ${b===p.bl?'selected':''}>${b}</option>`).join('')}</select></div>
+    <div><label class="fl">Target bookings (\u20acM)</label><input class="t" id="ep_tcv" value="${p.tcv}"></div>
+    <div><label class="fl">Expected sign (Qn-YYYY)</label><input class="t" id="ep_sign" value="${p.sign}"></div>
+    <div><label class="fl">Status / stage</label><select class="t" id="ep_st">${PSTAGES.map((x,i)=>`<option value="${i}" ${i===p.st?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div><label class="fl">Assigned seller</label><input class="t" id="ep_own" value="${p.own}"></div>
+  </div>
+  <div class="mt"><button class="btn" onclick="saveProspect('${p.id}')">Save changes</button>
+  <button class="btn gray" onclick="closeDrawer()">Cancel</button></div>
+  <div class="legend mt">Every edit is written to the prospect audit trail (user, field, previous value, new value, timestamp) and row-level security still applies \u2014 sellers can only edit prospects in their own country.</div>`);
+}
+function saveProspect(id){
+  const p=PROSPECTS.find(x=>x.id===id); if(!p) return;
+  const g=i=>document.getElementById(i);
+  p.ind=g('ep_ind').value.trim()||p.ind;
+  p.bl=g('ep_bl').value;
+  p.tcv=parseFloat(g('ep_tcv').value)||p.tcv;
+  p.sign=g('ep_sign').value.trim()||p.sign;
+  p.st=+g('ep_st').value;
+  p.own=g('ep_own').value.trim()||p.own;
+  closeDrawer();
+  const b=document.getElementById('pbody'); if(b) b.innerHTML=prospectsView();
+}
+function newProspect(){document.querySelector('#ptabs button[data-t=intake]').click();
+  document.querySelectorAll('#ptabs button').forEach(x=>x.classList.remove('active'));
+  document.querySelector('#ptabs button[data-t=intake]').classList.add('active');}
+function intakeView(){
+  return `<div class="card mb"><h3>Two intake paths, one master database</h3>
+  <p class="muted" style="font-size:12.5px;margin-top:-6px">Choose the simplest route based on volume. Both routes use the same mandatory fields and publish into one prospect master.</p></div>
+  <div class="row">
+  <div class="card" style="flex:1;min-width:330px"><h3>\u2460 Quick form <span class="badge b-blue">SINGLE ACCOUNT</span></h3>
+    <p class="muted" style="font-size:12.5px;margin-top:-6px">Create or update one target account. Also available inline from Seller Input and from a radar signal.</p>
+    <div class="f2">
+      <div><label class="fl">Company name *</label><input class="t" placeholder="Enter company"></div>
+      <div><label class="fl">Country *</label><select class="t">${COUNTRIES.map(c=>`<option ${c.code===scope.code?'selected':''}>${c.name}</option>`).join('')}</select></div>
+      <div><label class="fl">Industry *</label><select class="t">${['Manufacturing','Retail','CPG','Automotive','TMT','E&U','Transport','Financial Services','Life Sciences'].map(x=>`<option>${x}</option>`).join('')}</select></div>
+      <div><label class="fl">Revenue band</label><select class="t"><option>\u20ac500M \u2013 \u20ac1B</option><option>\u20ac1B \u2013 \u20ac2B</option><option>\u20ac2B \u2013 \u20ac3B</option></select></div>
+      <div><label class="fl">Business unit *</label><select class="t">${BUS.map(b=>`<option>${b}</option>`).join('')}</select></div>
+      <div><label class="fl">Assigned seller *</label><input class="t" placeholder="Search seller"></div>
+      <div><label class="fl">Campaign / trigger</label><select class="t"><option>Select or enter</option>${CAMPAIGNS.filter(c=>inScope(c.c)).map(c=>`<option>${c.n}</option>`).join('')}${TRIGGER_CATS.map(t=>`<option>Trigger: ${t.k}</option>`).join('')}</select></div>
+      <div><label class="fl">Next action</label><input class="t" placeholder="Enter next step"></div>
+    </div>
+    <div class="legend mt6">Prospect ID is auto-generated for new entries \u2014 e.g. <code>PRS-${scope.type==='country'?scope.code:'XX'}-00031</code>.</div>
+    <div class="mt"><button class="btn sm ghost">Save draft</button>
+    <button class="btn sm" onclick="alert('Prototype \u2014 would validate, dedupe and create the prospect at stage Target / Identified.')">Submit</button></div>
+  </div>
+  <div class="card" style="flex:1;min-width:330px"><h3>\u2461 Excel upload <span class="badge b-teal">BULK UPLOAD</span></h3>
+    <p class="muted" style="font-size:12.5px;margin-top:-6px">Add or refresh multiple target accounts using the governed template.</p>
+    <div style="border:2px dashed var(--line);border-radius:10px;padding:20px;text-align:center;color:var(--mut);font-size:12.5px">
+      \U0001F4C4 Drop <b>target_accounts.xlsx</b> here<br>
+      <span class="legend">Columns: Prospect ID \u00b7 Company name* \u00b7 Country* \u00b7 Industry* \u00b7 Business unit* \u00b7 Revenue band \u00b7 Assigned seller* \u00b7 Campaign/trigger \u00b7 Next action</span></div>
+    <div class="mt"><button class="btn sm ghost">\u2193 Download template</button>
+    <button class="btn sm" onclick="mockUpload()">Upload &amp; validate</button></div>
+    <div id="uploadout" class="mt"></div>
+  </div></div>
+  <div class="card mt"><h3>Backend process \u2014 capture, validate, publish</h3>
+  <div class="flow">
+    <div class="fs"><b>1 \u00b7 Capture</b><span style="font-size:12px;color:var(--mut)">Quick form (single account) or Excel upload (bulk)</span></div>
+    <div class="fs"><b>2 \u00b7 Validate &amp; match</b><span style="font-size:12px;color:var(--mut)">Required fields complete \u00b7 duplicate account check \u00b7 format and value validation \u00b7 owner/BU mapping \u00b7 existing record match. Errors are shown inline for correction before anything is committed.</span></div>
+    <div class="fs"><b>3 \u00b7 Publish</b><span style="font-size:12px;color:var(--mut)">One governed record in the prospect master, linked across the full lifecycle \u2014 single source of truth, audit trail, searchable</span></div>
+  </div></div>
+  <div class="card mt"><h3>Recent uploads</h3>
+  <table><thead><tr><th>File</th><th>Country</th><th>Uploaded by</th><th>When</th><th>Rows</th><th>Accepted</th><th>Rejected</th><th>Status</th></tr></thead><tbody>
+    <tr><td>NL_target_list_H2.xlsx</td><td>Netherlands</td><td>S. de Vries</td><td>28 Jul 2026</td><td>62</td><td>58</td><td>4</td><td><span class="badge b-green">Committed</span></td></tr>
+    <tr><td>DE_industrial_targets.xlsx</td><td>Germany</td><td>K. Weber</td><td>04 Aug 2026</td><td>81</td><td>74</td><td>7</td><td><span class="badge b-green">Committed</span></td></tr>
+    <tr><td>UK_manufacturing_wave2.csv</td><td>United Kingdom</td><td>R. Patel</td><td>08 Aug 2026</td><td>44</td><td>\u2014</td><td>\u2014</td><td><span class="badge b-amber">Staged \u2014 awaiting review</span></td></tr>
+  </tbody></table>
+  <div class="legend mt">Closed on 11 Aug 2026: intake is <b>both</b> paths \u2014 a quick form for single accounts and an Excel upload for volume, sharing one field set and one validation chain.</div></div>`;
+}
+function mockUpload(){
+  document.getElementById('uploadout').innerHTML=
+  `<div class="output"><b>Validation complete</b>
+
+\u2022 44 rows read
+\u2022 38 accepted \u2192 staged as prospects (PRS-${scope.code}-00031 \u2026 00068)
+\u2022 4 duplicates matched to existing accounts by name + country + domain
+\u2022 2 rejected: missing industry code (rows 19, 31)
+
+Nothing is committed until you approve the staged batch.</div>
+  <div class="mt"><button class="btn sm">Approve &amp; commit</button> <button class="btn sm gray">Download rejects</button></div>`;
+}
+function dataView(){
+  const MAP=[['Client name','Account name','Account','Client / account name'],['Business unit','BU','Owning unit','Business unit'],
+    ['Sales stage','Opportunity stage','Stage','Sales stage'],['CTT sign date','Sign date','Target close date','CTT sign date'],
+    ['TCV &amp; CV','TCV / CV','Value fields','TCV &amp; CV'],['Offer','Offering','Product / offer','Offer']];
+  return `<div class="card mb"><h3>Master list \u2014 one record across prospects and opportunities</h3>
+  <p class="muted" style="font-size:12.5px;margin-top:-6px">Target list intake (form or Excel) \u2192 pre-Thor stages 01\u201304 \u2192 Thor stages 05\u201307. One governed record, one lifecycle.</p>
+  <div class="cols">
+    ${[['IDENTITY','Client ID \u00b7 company \u00b7 country \u00b7 industry'],['SEGMENTATION','BU / MU \u00b7 revenue band \u00b7 market \u00b7 sector'],
+       ['OWNERSHIP','Seller \u00b7 account owner \u00b7 contributors'],['ENGAGEMENT','Campaign \u00b7 trigger \u00b7 activities \u00b7 outcomes'],
+       ['THOR OPPORTUNITY','Thor ID \u00b7 stage \u00b7 TCV / CV \u00b7 CTT date'],['GOVERNANCE','Source \u00b7 validation \u00b7 history \u00b7 data quality']]
+      .map(x=>`<div class="card" style="background:#f8fafc"><b style="font-size:11.5px;color:var(--primary)">${x[0]}</b><div class="legend mt6">${x[1]}</div></div>`).join('')}
+  </div>
+  <div class="mt"><span class="legend">Master data controls: </span>${['Unique ID','Duplicate matching','Field validation','Audit trail','Daily refresh'].map(x=>`<span class="chip">${x}</span>`).join('')}</div>
+  <div class="mt"><span class="legend">Connected outputs: </span>${['Pipeline Explorer','Campaign management','Executive dashboards','Triggers Radar','Search &amp; Smart Agents'].map(x=>`<span class="chip">${x}</span>`).join('')}</div>
+  </div>
+  <div class="row mb">
+    <div class="card" style="flex:1;min-width:300px"><h3>Option A \u2014 live Thor integration <span class="badge b-green">PREFERRED</span></h3>
+      <div class="flow mb"><div class="fs"><b>Thor</b></div><div class="fs"><b>API / integration layer</b></div><div class="fs"><b>Pipeline Explorer</b></div></div>
+      <div>${['Real-time visibility','Latest opportunity updates','No manual intervention','Improved analytics accuracy'].map(x=>`<span class="chip">\u2713 ${x}</span>`).join('')}</div>
+    </div>
+    <div class="card" style="flex:1;min-width:300px"><h3>Option B \u2014 daily automated refresh <span class="badge b-amber">FALLBACK</span></h3>
+      <div class="flow mb"><div class="fs"><b>Thor</b></div><div class="fs"><b>Daily CSV</b></div><div class="fs"><b>Execution bot</b></div><div class="fs"><b>Backend storage</b></div></div>
+      <div>${['Daily snapshots replace live feeds','Consistent reporting despite intra-day change','Structured extracts support bot integration'].map(x=>`<span class="chip">\u2713 ${x}</span>`).join('')}</div>
+    </div>
+  </div>
+  <div class="banner" style="background:#eef4fa;border-color:#cde3f0;color:#0b4a6f">
+    \u2699\uFE0F <b>Open action:</b> technology team to validate Thor API availability and integration feasibility; fall back to the daily automated refresh if live integration is not viable \u2014 owners Sheethal Prasad / Vijay Kaulgud, due 29 Aug 2026.</div>
+  <div class="card"><h3>Field mapping and nomenclature</h3>
+  <p class="muted" style="font-size:12.5px;margin-top:-6px">Resolve nomenclature differences between the portal, Thor and Salesforce, and establish one governed reporting definition.</p>
+  <table><thead><tr><th>Pipeline Explorer</th><th>Thor</th><th>Salesforce</th><th>Governed definition</th></tr></thead><tbody>
+  ${MAP.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td class="muted">${r[3]}</td></tr>`).join('')}
+  </tbody></table>
+  <div class="legend mt">Illustrative mapping structure \u2014 final names and definitions to be confirmed against sample datasets before build (owner: Mourya, with the technical team).</div>
+  <div class="legend mt6">The portal consumes and displays only. It never writes back to Thor or Salesforce. Every view built on the daily extract shows its data date.</div></div>`;
+}
+function openProspect(id){
+  const p=(typeof id==='string')?PROSPECTS.find(x=>x.id===id):id; if(!p) return;
+  const cty=COUNTRIES.find(c=>c.code===p.c);
+  drawer(p.n,`<code>${p.id}</code> <span class="badge ${p.st>=5?'b-green':'b-gray'}">${PSTAGES[p.st]}</span> <span class="muted">${cty.name}</span>`,`
+  <div class="row"><div class="kpi" style="flex:1"><div class="lab">Target bookings</div><div class="val">${money(p.tcv)}</div></div>
+  <div class="kpi" style="flex:1"><div class="lab">Expected sign</div><div class="val" style="font-size:18px">${p.sign}</div></div>
+  <div class="kpi" style="flex:1"><div class="lab">Assigned seller</div><div class="val" style="font-size:18px">${p.own}</div></div></div>
+  <h3 class="mt">Drill-down</h3>
+  <table><tbody>
+   <tr><th>Business line</th><td>${p.bl}</td></tr>
+   <tr><th>Industry</th><td>${p.ind}</td></tr>
+   <tr><th>Source / trigger</th><td>${p.src}</td></tr>
+   <tr><th>Active BU</th><td>${cty.bu}</td></tr>
+  </tbody></table>
+  <h3 class="mt">Stage history</h3>
+  <table><thead><tr><th>Stage</th><th>When</th><th>By</th></tr></thead><tbody>
+  ${PSTAGES.slice(0,p.st+1).map((st,i)=>`<tr><td>${st}</td><td class="muted">${['12 Jun','24 Jun','03 Jul','15 Jul','28 Jul','06 Aug','\u2014'][i]} 2026</td><td class="muted">${p.own}</td></tr>`).join('')}
+  </tbody></table>
+  <div class="mt"><button class="btn" onclick="editProspect('${p.id}')">\u270E Edit prospect</button>
+  <button class="btn ghost" onclick="openSellerInput('${p.n}')">\u270E Log an interaction</button>
+  ${p.st===5?`<button class="btn ghost" onclick="alert('Prototype \u2014 would create a Thor Sales Stage 2 opportunity and link it back to ${p.id}.')">\u2192 Convert to Stage 2 (Thor)</button>`:''}</div>
+  <div class="legend mt">Editable up to conversion \u2014 mandated fields (prospect ID, company name, country / BU, source) stay locked. The record becomes read-only on conversion; the pre-Thor history is retained against the account (spec 12 \u00a71.1).</div>`);
+}
+
+/* =========================== CAMPAIGNS (v3.0) =========================== */
+let campFilter={year:'All',bu:'All',month:'All'};
+let activeCampaign=null;
+let campPeriod={view:'Quarterly',q:'Q3',m:'Jul'};
+
+VIEWS.campaigns=()=>{
+  const tab=subview.campaigns||'calendar';
+  if(tab==='detail'&&activeCampaign) return campaignPage(activeCampaign);
+  return `<h2 class="page">Campaigns</h2>
+  <p class="sub">Campaign Calendar \u00b7 Campaign Builder \u00b7 metrics and GTM assets \u2014 all metrics derived from Seller Input, target lists and linked Thor opportunities</p>
+  <div class="tabs" id="ctabs">
+    <button data-t="calendar" class="${tab==='calendar'?'active':''}">Campaign Calendar</button>
+    <button data-t="builder" class="${tab==='builder'?'active':''}">Campaign Builder</button>
+  </div>
+  <div id="cbody"></div>`;
+};
+afterRender.campaigns=()=>{
+  const tabs=document.getElementById('ctabs');if(!tabs)return;
+  const body=document.getElementById('cbody');
+  const draw=(t)=>{subview.campaigns=t;
+    body.innerHTML = t==='builder'?campBuilder():campCalendar();};
+  draw(['calendar','builder'].includes(subview.campaigns)?subview.campaigns:'calendar');
+  tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');draw(b.dataset.t);});
+};
+function openCampaign(i){activeCampaign=typeof i==='number'?CAMPAIGNS[i]:i;subview.campaigns='detail';render();window.scrollTo(0,0);}
+function backToCampaigns(){subview.campaigns='calendar';activeCampaign=null;render();}
+function setPeriod(k,v){campPeriod[k]=v;render();}
+function campaignPage(c){
+  const m=c.m, cty=COUNTRIES.find(x=>x.code===c.c);
+  const trig=SIGNALS.filter(s=>s.c===c.c).slice(0,3).map(s=>s.cat);
+  const pct=(a,b)=>b?Math.round(a/b*100)+'% of target':'\u2014';
+  const metrics=[
+    ['\U0001F465','Target accounts',m.targets,pct(m.targets,m.tTargets)],
+    ['\U0001F465','Accounts engaged',m.engaged,pct(m.engaged,m.targets)],
+    ['\U0001F4C5','Meetings booked',m.booked,pct(m.booked,m.targets)],
+    ['\U0001F4C8','Meetings delivered',m.delivered,pct(m.delivered,m.targets)],
+    ['\U0001F53D','Leads converted',m.leads,pct(m.leads,m.targets)],
+    ['\U0001F4B6','Pipeline influenced',money(m.pipe),'linked Thor opportunities'],
+    ['\U0001F3C6','Bookings',money(m.bookings),'SOLD in Thor, mapped to campaign'],
+    ['\U0001F4BC','Revenue won',money(m.revenue),'year to date'],
+  ];
+  return `<div class="flex between wrapf mb">
+    <div><a class="legend clk" style="cursor:pointer;color:var(--primary)" onclick="backToCampaigns()">\u2190 Back to campaigns</a>
+    <h2 class="page" style="margin-top:4px">${c.n} <span class="badge ${c.status==='Active'?'b-green':'b-gray'}">${c.status}</span></h2>
+    <p class="sub" style="margin-bottom:0">${c.desc}</p></div>
+    <div><button class="btn sm" onclick="editCampaign(${CAMPAIGNS.indexOf(c)})">\u270E Edit campaign</button>
+    <button class="btn ghost sm" onclick="alert('Prototype \u2014 would download this campaign summary.')">\u2193 Download campaign summary</button></div>
+  </div>
+  <div class="card mb"><div class="flex between wrapf" style="gap:14px">
+    <div class="flex wrapf" style="gap:10px;align-items:center">
+      <span class="legend">Time filter</span>
+      ${['Annual','Quarterly','Monthly'].map(v=>`<label style="font-size:12.5px;cursor:pointer"><input type="radio" name="tf" ${campPeriod.view===v?'checked':''} onchange="setPeriod('view','${v}')"> ${v}</label>`).join('')}
+      ${campPeriod.view==='Quarterly'?`<span style="margin-left:8px">${['Q1','Q2','Q3','Q4'].map(q=>`<span class="chip clk ${campPeriod.q===q?'on':''}" onclick="setPeriod('q','${q}')">${q}</span>`).join('')}</span>`:''}
+      ${campPeriod.view==='Monthly'?`<span style="margin-left:8px">${['Jul','Aug','Sep'].map(x=>`<span class="chip clk ${campPeriod.m===x?'on':''}" onclick="setPeriod('m','${x}')">${x}</span>`).join('')}</span>`:''}
+    </div>
+    <div class="legend" style="text-align:right">Campaign duration<br><b style="color:var(--ink)">${c.startD} \u2192 ${c.endD}</b></div>
+  </div></div>
+  <h3 style="font-size:14px;margin:0 0 9px">1. Campaign overview</h3>
+  <div class="row mb">
+    <div class="card" style="flex:1;min-width:320px"><table><tbody>
+      <tr><th>Objective</th><td>${c.desc}</td></tr>
+      <tr><th>Target industry</th><td>${c.ind}</td></tr>
+      <tr><th>Target geography</th><td>${c.geos.join(' \u00b7 ')} <span class="legend">(BU: ${cty.bu})</span></td></tr>
+      <tr><th>Campaign owner</th><td>${c.owner}</td></tr>
+      <tr><th>Sponsor / SPOC</th><td>${c.sponsor}</td></tr>
+      <tr><th>Status</th><td><span class="badge ${c.status==='Active'?'b-green':'b-gray'}">${c.status}</span></td></tr>
+      <tr><th>Triggers for this campaign</th><td>${[...new Set(trig)].map(t=>`<span class="chip clk" onclick="go('radar','feed')" style="font-size:10.5px">${t}</span>`).join('')||'<span class="muted">\u2014</span>'}</td></tr>
+      <tr><th>Business line</th><td>${c.bl}${c.partner!=='\u2014'?` \u00b7 \U0001F91D ${c.partner}`:''}</td></tr>
+    </tbody></table></div>
+    <div class="card" style="flex:1;min-width:300px;background:linear-gradient(135deg,${c.hero[0]},${c.hero[1]});color:#fff;border:none;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:26px;font-weight:700;line-height:1.15">${c.theme}</div>
+      <div style="opacity:.85;margin-top:8px;font-size:13px">${c.sol}</div>
+      <div class="mt" style="display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;opacity:.9">
+        ${['Application rationalization','Cloud optimization','Vendor consolidation','Automation & modernization','Managed services'].map(x=>`<span>\u25CF ${x}</span>`).join('')}
+      </div>
+    </div>
+  </div>
+  <h3 style="font-size:14px;margin:18px 0 9px">2. Campaign metrics</h3>
+  <div class="m9 mb">${metrics.map(x=>`<div class="kpi"><div class="lab">${x[0]} ${x[1]}</div><div class="val" style="font-size:22px">${x[2]}</div><div class="meta">${x[3]}</div></div>`).join('')}</div>
+  <div class="card mb"><div class="flex between wrapf" style="gap:12px">
+    <div><div class="lab muted" style="font-size:11.5px">TARGET ACCOUNT UNIVERSE</div>
+      <div style="font-size:26px;font-weight:700">${m.targets} <span style="font-size:14px;font-weight:400;color:var(--mut)">accounts</span></div>
+      <div class="legend">${c.ind} \u00b7 ${c.geos.join(', ')} focus \u00b7 sourced from target lists, radar signals and manual adds</div></div>
+    <div><button class="btn ghost sm" onclick="go('pipeline','prospects')">\U0001F441 View account list</button>
+    <button class="btn ghost sm" onclick="alert('Prototype \u2014 would download the target account list as Excel.')">\u2193 Download Excel</button></div>
+  </div></div>
+  <h3 style="font-size:14px;margin:18px 0 9px">3. GTM assets</h3>
+  <div class="row mb">
+    <div class="card" style="flex:1;min-width:300px"><div class="flex" style="gap:12px">
+      <div class="ti" style="width:38px;height:38px;border-radius:10px;background:#e0f0fa;display:flex;align-items:center;justify-content:center;font-size:19px">\U0001F4C4</div>
+      <div style="flex:1"><b>Sales playbook</b>
+      <div class="legend mt6">One-page downloadable guide for the sales team: value proposition, key differentiators, talk tracks and recommended next steps.</div>
+      <div class="mt6"><button class="btn sm ghost">\u2193 Download PPT</button></div></div>
+    </div></div>
+    <div class="card" style="flex:1;min-width:300px"><div class="flex" style="gap:12px">
+      <div class="ti" style="width:38px;height:38px;border-radius:10px;background:#d9f2e4;display:flex;align-items:center;justify-content:center;font-size:19px">\U0001F4C8</div>
+      <div style="flex:1"><b>Market insights</b>
+      <div class="legend mt6">Industry and analyst reports, market trends and relevant perspectives supporting this campaign.</div>
+      <div class="mt6"><button class="btn sm ghost" onclick="go('solutions','assets')">View reports \u2197</button></div></div>
+    </div></div>
+  </div>
+  <div class="card"><h3>Linked solutions, assets and partner plays</h3>
+  <div><span class="chip">\U0001F4A1 ${c.sol}</span>${c.partner!=='\u2014'?`<span class="chip">\U0001F91D ${c.partner} partner play</span>`:''}<span class="chip">\U0001F4C4 ${c.theme} value case</span></div>
+  <h3 class="mt">Account shortlist</h3>
+  <table><thead><tr><th>Account</th><th>Stage</th><th>Top radar signal</th></tr></thead><tbody>
+  ${PROSPECTS.filter(p=>p.c===c.c).slice(0,5).map(p=>{const sg=SIGNALS.find(x=>x.acct===p.n);
+    return `<tr><td>${p.n}</td><td><span class="badge b-gray">${PSTAGES[p.st]}</span></td>
+    <td class="muted" style="font-size:11.5px">${sg?`<span class="badge ${RELCLS[sg.rel]}">${sg.rel}</span> ${sg.title}`:'\u2014'}</td></tr>`;}).join('')||'<tr><td colspan="3" class="muted">Accounts can be added at any point in the campaign.</td></tr>'}
+  </tbody></table>
+  <div class="legend mt">All campaign metrics are derived \u2014 target accounts from the intake/target list, engagement and meetings from Seller Input, pipeline and bookings from Thor opportunities mapped to this campaign. No campaign-specific data entry (spec 02 \u00a74).</div></div>`;
+}
+/* ---- Campaign Calendar v3.1 (15 Sept 2026): status filter + inline edit ---- */
+let campCalFilter={status:'All',bu:'All'};
+function setCampCal(k,v){campCalFilter[k]=v;const b=document.getElementById('cbody');if(b)b.innerHTML=campCalendar();}
+function campCalendar(){
+  const scoped=CAMPAIGNS.filter(c=>inScope(c.c));
+  const list=scoped.filter(c=>(campCalFilter.status==='All'||c.status===campCalFilter.status)
+    &&(campCalFilter.bu==='All'||COUNTRIES.find(x=>x.code===c.c).bu===campCalFilter.bu));
+  const months=['Jun 2026','Jul 2026','Aug 2026','Sep 2026','Oct 2026','Nov 2026'];
+  const startIdx=c=>{const m=c.launch.split(' ')[1];return Math.max(0,months.findIndex(x=>x.startsWith(m)));};
+  const span=c=>Math.max(1,Math.round(c.weeks/4.3));
+  const bgFor=st=>st==='Active'?'var(--primary)':st==='Approved'?'var(--teal)':st==='Review'?'#7c3aed':st==='Planned'?'#9dc4dd':st==='Paused'?'#d97706':st==='Closed'?'#64748b':'#d6dee7';
+  return `<div class="card mb"><div class="flex between wrapf" style="gap:8px">
+    <div class="flex wrapf" style="gap:8px;align-items:center">
+      <select class="t" style="width:auto" onchange="setCampCal('status',this.value)">
+        <option value="All">Campaign status: all</option>
+        ${CAMP_STATUSES.map(x=>`<option ${campCalFilter.status===x?'selected':''}>${x}</option>`).join('')}</select>
+      <select class="t" style="width:auto" onchange="setCampCal('bu',this.value)">
+        <option value="All">BU: all</option>
+        ${BUS.map(b=>`<option ${campCalFilter.bu===b?'selected':''}>${b}</option>`).join('')}</select>
+      ${(campCalFilter.status!=='All'||campCalFilter.bu!=='All')?`<button class="btn sm gray" onclick="campCalFilter={status:'All',bu:'All'};setCampCal('status','All')">Clear filters</button>`:''}
+      <span class="legend" style="align-self:center">${list.length} of ${scoped.length} campaigns \u00b7 ${list.filter(c=>c.status==='Active').length} active</span>
+    </div>
+    <div><button class="btn ghost sm" onclick="alert('Prototype \u2014 would export the campaign calendar to Excel or PDF.')">\u2193 Export calendar</button>
+    <button class="btn sm" onclick="document.querySelector('#ctabs button[data-t=builder]').click()">+ New campaign</button></div>
+  </div></div>
+  <div class="card"><h3>Planned &amp; active campaigns by month \u2014 ${scopeLabel()}</h3>
+  <div style="overflow-x:auto"><table><thead><tr><th style="min-width:250px">Campaign</th><th>Status</th>${months.map(m=>`<th style="text-align:center">${m}</th>`).join('')}<th></th></tr></thead><tbody>
+  ${list.map(c=>{const st=startIdx(c),w=span(c);
+    return `<tr class="clk" onclick="openCampaign(${CAMPAIGNS.indexOf(c)})"><td><b>${c.n}</b><br><span class="muted" style="font-size:11px">${c.bl} \u00b7 ${c.owner}</span></td>
+    <td><span class="badge ${c.status==='Active'?'b-green':c.status==='Review'?'b-violet':c.status==='Approved'?'b-teal':'b-gray'}">${c.status}</span></td>
+    ${months.map((m,i)=>{const on=i>=st&&i<st+w;
+      return `<td style="padding:6px 4px">${on?`<div style="height:16px;border-radius:5px;background:${bgFor(c.status)}"></div>`:''}</td>`;}).join('')}
+    <td><button class="btn sm ghost" onclick="event.stopPropagation();editCampaign(${CAMPAIGNS.indexOf(c)})">\u270E Edit</button></td>
+    </tr>`;}).join('')||`<tr><td colspan="${months.length+3}" class="muted">No campaigns match the selected status and BU.</td></tr>`}
+  </tbody></table></div>
+  <div class="legend mt">${CAMP_STATUSES.map(x=>`<span class="chip" style="background:${bgFor(x)};color:#fff">${x}</span>`).join('')}
+  \u00b7 Click a campaign to open its overview, metrics, target account universe and GTM assets. Rich calendar visualisation, carousels and event/social snippets are Phase 2 (spec 14).</div></div>`;
+}
+/* ---- Edit campaign ---- */
+function enrichCampaign(c){
+  const [dd,mon,yr]=c.launch.split(' ');
+  c.month=MONTHS.indexOf(mon); c.year=+yr; c.weeks=parseInt(c.dur)||12;
+  const st=new Date(+yr,c.month,+dd), en=new Date(st.getTime()+c.weeks*7*864e5);
+  c.startD=c.launch;
+  c.endD=`${String(en.getDate()).padStart(2,'0')} ${MONTHS[en.getMonth()]} ${en.getFullYear()}`;
+  c.ind=CAMP_INDUSTRY[c.theme]||c.ind||'Cross-industry';
+}
+function editCampaign(i){
+  const c=CAMPAIGNS[i];
+  drawer('Edit campaign \u2014 '+c.n,`<span class="badge ${c.status==='Active'?'b-green':'b-gray'}">${c.status}</span> <span class="muted">${c.geos.join(' \u00b7 ')}</span>`,`
+  <div class="card mb" style="background:#f7f9fb"><b style="font-size:12.5px">\U0001F512 Derived metrics are not editable</b>
+  <div class="legend mt6">Target accounts, engagement, meetings, leads, pipeline influenced and bookings are derived from Seller Input, the target list and linked Thor opportunities \u2014 there is no campaign-specific data entry (spec 02 \u00a74).</div></div>
+  <div class="f2">
+    <div><label class="fl">Campaign name *</label><input class="t" id="ec_n" value="${c.n}"></div>
+    <div><label class="fl">Status *</label><select class="t" id="ec_status">${CAMP_STATUSES.map(x=>`<option ${x===c.status?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div><label class="fl">Campaign owner *</label><input class="t" id="ec_owner" value="${c.owner}"></div>
+    <div><label class="fl">Sponsor / SPOC</label><input class="t" id="ec_sponsor" value="${c.sponsor}"></div>
+    <div><label class="fl">Start date * (DD Mon YYYY)</label><input class="t" id="ec_launch" value="${c.launch}"></div>
+    <div><label class="fl">Duration</label><input class="t" id="ec_dur" value="${c.dur}"></div>
+    <div><label class="fl">Business line</label><select class="t" id="ec_bl">${BLS.map(b=>`<option ${b===c.bl?'selected':''}>${b}</option>`).join('')}</select></div>
+    <div><label class="fl">Theme</label><select class="t" id="ec_theme">${THEMES.map(t=>`<option ${t===c.theme?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div><label class="fl">Partner</label><input class="t" id="ec_partner" value="${c.partner}"></div>
+    <div><label class="fl">Linked solution</label><input class="t" id="ec_sol" value="${c.sol}"></div>
+  </div>
+  <label class="fl mt">Objective</label><textarea class="t" id="ec_desc" rows="3">${c.desc}</textarea>
+  <div class="mt"><button class="btn" onclick="saveCampaign(${i})">Save changes</button>
+  <button class="btn gray" onclick="closeDrawer()">Cancel</button></div>
+  <div class="legend mt">Status changes follow the campaign lifecycle: ${CAMP_STATUSES.join(' \u2192 ')}. Edits are audited and visible on the Campaign Calendar immediately.</div>`);
+}
+function saveCampaign(i){
+  const c=CAMPAIGNS[i], g=x=>document.getElementById(x);
+  c.n=g('ec_n').value.trim()||c.n;
+  c.status=g('ec_status').value;
+  c.owner=g('ec_owner').value.trim()||c.owner;
+  c.sponsor=g('ec_sponsor').value.trim()||c.sponsor;
+  c.launch=g('ec_launch').value.trim()||c.launch;
+  c.dur=g('ec_dur').value.trim()||c.dur;
+  c.bl=g('ec_bl').value; c.theme=g('ec_theme').value;
+  c.partner=g('ec_partner').value.trim()||'\u2014';
+  c.sol=g('ec_sol').value.trim()||c.sol;
+  c.desc=g('ec_desc').value.trim()||c.desc;
+  enrichCampaign(c);
+  closeDrawer(); render();
+}
+function campBuilder(){
+  return `<div class="card mb"><h3>\U0001F4C4 1. Campaign basics</h3>
+  <p class="muted" style="font-size:12.5px;margin-top:-6px">Create a campaign to orchestrate GTM activities, assets and account focus. Fields marked * are mandatory.</p>
+  <div class="f2">
+    <div><label class="fl">Campaign name *</label><input class="t" placeholder="Enter campaign name"></div>
+    <div><label class="fl">Target business unit * (multi-select)</label>
+      <div>${BUS.map((b,i)=>`<span class="chip clk ${i<2?'on':''}" onclick="this.classList.toggle('on')">${b} \u00d7</span>`).join('')}</div></div>
+    <div><label class="fl">Campaign owner *</label><input class="t" placeholder="Search and select owner"></div>
+    <div><label class="fl">Campaign sponsor <span style="text-transform:none">(optional)</span></label><input class="t" placeholder="Search and select sponsor"></div>
+    <div><label class="fl">Start date *</label><input class="t" placeholder="Select start date"></div>
+    <div><label class="fl">End date *</label><input class="t" placeholder="Select end date"></div>
+    <div><label class="fl">Launch month / year *</label><select class="t">${MONTHS.map((m,i)=>`<option ${i===7?'selected':''}>${m} 2026</option>`).join('')}</select></div>
+    <div><label class="fl">Duration <span style="text-transform:none">(derived)</span></label><input class="t" value="12 weeks" disabled></div>
+    <div><label class="fl">Target industry <span style="text-transform:none">(optional)</span></label>
+      <select class="t"><option>Select industry</option>${['Industrial Manufacturing','Retail','CPG','Automotive','TMT','Energy & Utilities','Transport','Financial Services','Life Sciences','Cross-industry'].map(x=>`<option>${x}</option>`).join('')}</select></div>
+    <div><label class="fl">Status</label><select class="t">${CAMP_STATUSES.map((x,i)=>`<option ${i===0?'selected':''}>${x}</option>`).join('')}</select></div>
+  </div>
+  <label class="fl">Campaign description *</label>
+  <textarea class="t" rows="3" placeholder="Brief description of the campaign purpose, context and expected impact (max 500 characters)"></textarea>
+  </div>
+  <div class="card mb"><h3>\u2728 2. Campaign enrichment <span class="legend" style="font-weight:400">(optional)</span></h3>
+  <div class="f2">
+    <div><label class="fl">\U0001F5BC Campaign visual</label><select class="t"><option>Select visual</option><option>IT cost reduction</option><option>Cloud &amp; data</option><option>Sustainable operations</option><option>AI innovation</option></select></div>
+    <div><label class="fl">\U0001F465 Target account list</label><select class="t"><option>Select account list</option><option>NL industrial targets H2 (58)</option><option>DE industrial targets (74)</option><option>Build from a radar category</option></select></div>
+    <div><label class="fl">\U0001F4C8 Market insights</label><select class="t"><option>Select market insights</option>${ASSETS.filter(a=>a.type==='Deck'||a.type==='Case study').map(a=>`<option>${a.n}</option>`).join('')}</select></div>
+    <div><label class="fl">\U0001F4C4 Sales playbook</label><select class="t"><option>Select sales playbook</option>${ASSETS.filter(a=>a.type==='Sales kit'||a.type==='Template').map(a=>`<option>${a.n}</option>`).join('')}</select></div>
+  </div>
+  <label class="fl">Linked solutions</label>
+  <div>${SOLUTIONS.slice(0,6).map((x,i)=>`<span class="chip clk ${i===0?'on':''}" onclick="this.classList.toggle('on')">${x.n}</span>`).join('')}</div>
+  <label class="fl">Partner play(s)</label>
+  <div>${PARTNER_PLAYS.filter(x=>x.st==='Active').map(x=>`<span class="chip clk" onclick="this.classList.toggle('on')">\U0001F91D ${x.n}</span>`).join('')}</div>
+  <div class="legend mt">Campaign artifacts are no longer uploaded on the basics screen \u2014 they are selected here from the governed GTM asset repository (decision, 11 Aug 2026).</div>
+  </div>
+  <div class="flex wrapf" style="gap:8px;justify-content:flex-end">
+    <button class="btn gray" onclick="document.querySelector('#ctabs button[data-t=calendar]').click()">Cancel</button>
+    <button class="btn ghost">\U0001F4BE Save draft</button>
+    <button class="btn ghost">\U0001F441 Preview campaign</button>
+    <button class="btn" onclick="alert('Prototype \u2014 would create the campaign in Draft, generate its playbook, and create or link a prospect record for every target account.')">Create campaign \u2192</button>
+  </div>
+  <div class="legend mt">On save the campaign playbook is generated from these fields and every target account is created or linked as a prospect in the Pipeline Explorer. Campaign metrics then accrue automatically from Seller Input and mapped Thor opportunities.</div>`;
+}
+
+/* =========================== SOLUTIONS & ASSETS =========================== */
+VIEWS.solutions=()=>{
+  const tab=subview.solutions||'assets';
+  return `<h2 class="page">Solutions &amp; Assets</h2>
+  <p class="sub">Grouped by Business Line first · tagged to themes and campaigns · partner plays linkable into campaigns</p>
+  <div class="tabs" id="stabs">
+    <button data-t="assets" class="${tab==='assets'?'active':''}">Assets by Business Line</button>
+    <button data-t="solutions" class="${tab==='solutions'?'active':''}">Solutions</button>
+    <button data-t="partners" class="${tab==='partners'?'active':''}">Partner Plays</button>
+  </div>
+  <div id="sbody"></div>`;
+};
+afterRender.solutions=()=>{
+  const tabs=document.getElementById('stabs'),body=document.getElementById('sbody');
+  const draw=(t)=>{subview.solutions=t;
+    body.innerHTML = t==='assets'?assetsView():t==='solutions'?solutionsView():partnersView();};
+  draw(subview.solutions||'assets');
+  tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');draw(b.dataset.t);});
+};
+/* ---- Asset lifecycle enrichment v3.1 (15 Sept 2026): refresh & maintenance ---- */
+const ASSET_LIFECYCLE=['Draft','Submitted','Certified','In refresh','Re-certified','Retired'];
+const ASSET_OWNERS=['S. de Vries','K. Weber','R. Patel','A. Lindqvist','M. Jansen','T. Schmidt'];
+const REVIEW_MONTHS={'Battle card':6,'Template':12,'Deck':9,'Blueprint':12,'Sales kit':9,'Case study':18,'RFP response':12};
+ASSETS.forEach((a,i)=>{
+  a.owner=a.owner||ASSET_OWNERS[i%ASSET_OWNERS.length];
+  a.cycle=a.cycle||(REVIEW_MONTHS[a.type]||12);
+  const last=new Date(2026,(i*2)%12,10);
+  a.lastReview=`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][last.getMonth()]} ${last.getFullYear()}`;
+  const nx=new Date(last.getFullYear(),last.getMonth()+a.cycle,10);
+  a.nextReview=`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][nx.getMonth()]} ${nx.getFullYear()}`;
+  a.due=nx<=new Date(2026,11,31);
+  a.state=a.cert==='Certified'?(a.due?'In refresh':'Certified'):a.cert;
+  a.src=a.src||'Repository link';
+});
+function assetHealth(){
+  const due=ASSETS.filter(a=>a.due).length, cert=ASSETS.filter(a=>a.cert==='Certified').length;
+  return {due,cert,total:ASSETS.length};
+}
+/* ---- Upload asset / add external link ---- */
+function uploadAsset(){
+  drawer('Upload asset','<span class="badge b-blue">New asset</span> <span class="muted">File upload</span>',`
+  <div class="card mb" style="background:#f7f9fb"><b style="font-size:12.5px">\u2139\uFE0F Where the file lives</b>
+  <div class="legend mt6">Uploaded files are stored in the Factory SharePoint library. The portal holds the metadata, the version and the link \u2014 it is not a document management system (spec 03 \u00a73).</div></div>
+  <div class="f2">
+    <div><label class="fl">Asset name *</label><input class="t" id="ua_n" placeholder="e.g. IT Cost Takeout \u2014 value case model"></div>
+    <div><label class="fl">Business line *</label><select class="t" id="ua_bl">${BLS.map(b=>`<option>${b}</option>`).join('')}</select></div>
+    <div><label class="fl">Theme *</label><select class="t" id="ua_th">${THEMES.map(t=>`<option>${t}</option>`).join('')}</select></div>
+    <div><label class="fl">Asset type *</label><select class="t" id="ua_type">${['Template','Blueprint','Battle card','Deck','Sales kit','Case study','RFP response'].map(t=>`<option>${t}</option>`).join('')}</select></div>
+    <div><label class="fl">Version</label><input class="t" id="ua_ver" value="v1"></div>
+    <div><label class="fl">Asset owner *</label><input class="t" id="ua_owner" placeholder="Search and select owner"></div>
+    <div><label class="fl">Refresh cycle (months)</label><select class="t" id="ua_cycle">${[6,9,12,18,24].map(x=>`<option ${x===12?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div><label class="fl">Visibility</label><select class="t" id="ua_vis"><option>NCE \u2014 all countries</option>${BUS.map(b=>`<option>${b} (BU)</option>`).join('')}${COUNTRIES.map(c=>`<option>${c.name}</option>`).join('')}</select></div>
+  </div>
+  <label class="fl mt">File *</label>
+  <div class="card" style="border-style:dashed;text-align:center;padding:22px;cursor:pointer" onclick="alert('Prototype \u2014 would open the file picker and upload to the Factory SharePoint library.')">
+    <div style="font-size:26px">\u2B06\uFE0F</div><b style="font-size:13px">Drag a file here, or click to browse</b>
+    <div class="legend mt6">PPTX \u00b7 DOCX \u00b7 XLSX \u00b7 PDF \u00b7 max 50 MB</div></div>
+  <label class="fl mt">Short description</label><textarea class="t" id="ua_desc" rows="3" placeholder="What the asset is and when to use it"></textarea>
+  <div class="mt"><button class="btn" onclick="saveAsset('upload')">Upload &amp; submit for certification</button>
+  <button class="btn gray" onclick="closeDrawer()">Cancel</button></div>
+  <div class="legend mt">New assets enter the lifecycle as <b>Draft \u2192 Submitted</b>. Certification is performed by the Business Line asset owner before the asset becomes reusable across countries.</div>`);
+}
+function addAssetLink(){
+  drawer('Add external / repository link','<span class="badge b-teal">New asset</span> <span class="muted">Link only \u2014 no file copy</span>',`
+  <div class="card mb" style="background:#f7f9fb"><b style="font-size:12.5px">\U0001F517 Link, do not copy</b>
+  <div class="legend mt6">Preferred route for assets that already live in TLC, Export, MSDT, Proposal or Marketing repositories. The portal registers the metadata and the URL so the source stays the single point of truth.</div></div>
+  <div class="f2">
+    <div><label class="fl">Asset name *</label><input class="t" id="al_n" placeholder="Asset title as it appears in the source"></div>
+    <div><label class="fl">Source repository *</label><select class="t" id="al_repo">${['TLC','Export','MSDT','Proposal','Marketing','SharePoint','External / partner'].map(r=>`<option>${r}</option>`).join('')}</select></div>
+    <div><label class="fl">Business line *</label><select class="t" id="al_bl">${BLS.map(b=>`<option>${b}</option>`).join('')}</select></div>
+    <div><label class="fl">Theme *</label><select class="t" id="al_th">${THEMES.map(t=>`<option>${t}</option>`).join('')}</select></div>
+    <div><label class="fl">Asset type *</label><select class="t" id="al_type">${['Template','Blueprint','Battle card','Deck','Sales kit','Case study','RFP response'].map(t=>`<option>${t}</option>`).join('')}</select></div>
+    <div><label class="fl">Version</label><input class="t" id="al_ver" value="v1"></div>
+    <div><label class="fl">Asset owner *</label><input class="t" id="al_owner" placeholder="Search and select owner"></div>
+    <div><label class="fl">Refresh cycle (months)</label><select class="t" id="al_cycle">${[6,9,12,18,24].map(x=>`<option ${x===12?'selected':''}>${x}</option>`).join('')}</select></div>
+  </div>
+  <label class="fl mt">URL *</label><input class="t" id="al_url" placeholder="https://\u2026">
+  <div class="mt6"><button class="btn sm ghost" onclick="alert('Prototype \u2014 would validate that the link resolves and that the current user has access.')">Test link</button></div>
+  <label class="fl mt">Short description</label><textarea class="t" id="al_desc" rows="3" placeholder="What the asset is and when to use it"></textarea>
+  <div class="mt"><button class="btn" onclick="saveAsset('link')">Register asset</button>
+  <button class="btn gray" onclick="closeDrawer()">Cancel</button></div>
+  <div class="legend mt">Broken links are detected on the refresh cycle and flagged to the asset owner in the maintenance queue.</div>`);
+}
+function saveAsset(mode){
+  const g=x=>{const e=document.getElementById(x);return e?e.value.trim():'';};
+  const p=mode==='upload'?'ua_':'al_';
+  const n=g(p+'n');
+  if(!n){alert('Asset name is mandatory.');return;}
+  ASSETS.unshift({n:n,bl:g(p+'bl'),th:g(p+'th'),type:g(p+'type'),repo:mode==='upload'?'SharePoint':g('al_repo'),
+    ver:g(p+'ver')||'v1',cert:'Submitted',reuse:0,owner:g(p+'owner')||'Unassigned',cycle:+g(p+'cycle')||12,
+    lastReview:'Sep 2026',nextReview:'Sep 2027',due:false,state:'Submitted',src:mode==='upload'?'Uploaded file':'Repository link'});
+  closeDrawer();
+  const b=document.getElementById('sbody'); if(b) b.innerHTML=assetsView();
+}
+function assetsView(){
+  const groups=BLS.filter(bl=>ASSETS.some(a=>a.bl===bl));
+  const h=assetHealth();
+  return `<div class="flex between wrapf mb" style="gap:8px">
+    <div class="muted">${h.total} assets \u00b7 <span class="badge b-green">${h.cert} certified</span> <span class="badge b-amber">${h.due} due for refresh</span></div>
+    <div><button class="btn sm" onclick="uploadAsset()">\u2B06\uFE0F Upload asset</button>
+    <button class="btn sm ghost" onclick="addAssetLink()">\U0001F517 Add external / repository link</button></div>
+  </div>
+  <div class="mb"><span class="legend">Filter by theme: </span>${THEMES.map(t=>`<span class="chip clk" onclick="this.classList.toggle('on')">${t}</span>`).join('')}</div>
+  ${groups.map(bl=>`<div class="card mb"><div class="flex between mb"><h3 style="margin:0">${bl}</h3>
+    <span class="legend">${ASSETS.filter(a=>a.bl===bl).length} assets · ${ASSETS.filter(a=>a.bl===bl&&a.cert==='Certified').length} certified</span></div>
+    <table><thead><tr><th>Asset</th><th>Theme</th><th>Type</th><th>Source repository</th><th>Ver</th><th>Certification</th><th>Reuse</th></tr></thead><tbody>
+    ${ASSETS.filter(a=>a.bl===bl).map(a=>`<tr class="clk" onclick='openAsset(${esc(a)})'>
+      <td><b>${a.n}</b></td><td><span class="chip">${a.th}</span></td><td>${a.type}</td><td class="muted">${a.repo}</td><td>${a.ver}</td>
+      <td><span class="badge ${a.cert==='Certified'?'b-green':a.cert==='Submitted'?'b-amber':'b-gray'}">${a.cert}</span></td><td>${a.reuse}×</td></tr>`).join('')}
+    </tbody></table></div>`).join('')}
+  <div class="card mb"><h3>Asset refresh &amp; maintenance lifecycle</h3>
+  <p class="muted" style="font-size:12.5px;margin-top:-6px">Every asset carries a named owner and a refresh cycle. Assets that pass their review date move to <b>In refresh</b> and stay out of the certified reuse count until re-certified.</p>
+  <div class="flow">${ASSET_LIFECYCLE.map((x,i)=>`<div class="fs"><b>${i+1} \u00b7 ${x}</b><span style="font-size:12px;color:var(--mut)">${['Created, not yet submitted','Owner submits for certification','Approved by the BL asset owner \u2014 reusable across countries','Review date passed \u2014 owner updates content and version','Refreshed asset re-approved and version incremented','Superseded or no longer relevant \u2014 archived, link retained'][i]}</span></div>`).join('')}</div>
+  <h3 class="mt">Maintenance queue \u2014 assets due for refresh</h3>
+  <div style="overflow-x:auto"><table><thead><tr><th>Asset</th><th>BL</th><th>Owner</th><th>Cycle</th><th>Last review</th><th>Next review</th><th>Lifecycle state</th><th></th></tr></thead><tbody>
+  ${ASSETS.filter(a=>a.due).map(a=>`<tr><td><b>${a.n}</b></td><td>${a.bl}</td><td>${a.owner}</td><td>${a.cycle} mo</td><td class="muted">${a.lastReview}</td><td>${a.nextReview}</td>
+    <td><span class="badge ${a.state==='In refresh'?'b-amber':a.state==='Certified'?'b-green':'b-gray'}">${a.state}</span></td>
+    <td><button class="btn sm ghost" onclick="alert('Prototype \u2014 would notify ${a.owner} and open the refresh task for this asset.')">Request refresh</button></td></tr>`).join('')||'<tr><td colspan="8" class="muted">No assets are currently past their review date.</td></tr>'}
+  </tbody></table></div>
+  <div class="legend mt">Reminders are raised to the asset owner 30 days before the review date. Retired assets stay searchable with a clear <b>Retired</b> badge so historical proposals remain traceable.</div></div>
+  <div class="card"><b>Harvesting sources</b>
+  <div class="mt6">${['Exports','TLC','MSDT portal','Proposal assets','Case studies','Sales kits','Battle cards','Marketing collateral'].map(s=>`<span class="chip">${s}</span>`).join('')}</div>
+  <div class="legend mt">MVP starts from a small curated set — no heavy curation exercise (spec 03 §3). Files stay in SharePoint / their existing repository; the portal stores metadata and the link.</div></div>`;
+}
+function solutionsView(){
+  return `<div class="cols">${SOLUTIONS.map(s=>`<div class="card" style="cursor:pointer" onclick='openSolution(${esc(s)})'>
+    <div class="flex between mb"><span class="badge ${s.cls==='Industry'?'b-teal':s.cls==='Business Line'?'b-violet':'b-blue'}">${s.cls}</span>
+    <span class="badge ${s.mat==='Industrialized'?'b-green':s.mat==='In-Development'?'b-amber':'b-gray'}">${s.mat}</span></div>
+    <b>${s.n}</b><div class="muted mb" style="font-size:12px">${s.bl}</div>
+    <div><span class="chip">${s.th}</span></div>
+    <div class="legend mt6">${s.assets} assets · reused ${s.reuse}×</div></div>`).join('')}</div>`;
+}
+function partnersView(){
+  const list=PARTNER_PLAYS.filter(p=>p.cty.some(inScope));
+  return `<div class="flex between wrapf mb">
+    <div class="muted">${list.filter(p=>p.st==='Active').length} active partner plays in ${scopeLabel()} · ${money(list.reduce((a,b)=>a+b.pipe,0))} partner-influenced pipeline</div>
+    <button class="btn sm">+ New partner play</button></div>
+  <div class="cols">${list.map(p=>`<div class="card" style="cursor:pointer" onclick='openPartner(${esc(p)})'>
+    <div class="flex between mb"><span class="badge b-amber">🤝 ${p.p}</span><span class="badge ${p.st==='Active'?'b-green':'b-gray'}">${p.st}</span></div>
+    <b>${p.n}</b><div class="muted mb" style="font-size:12px">${p.bl} · ${p.tier} partner</div>
+    <div style="font-size:12.2px">${p.vp}</div>
+    <div class="legend mt6">${p.camp} campaigns · ${money(p.pipe)} influenced · ${p.cty.join(' ')}</div></div>`).join('')}</div>
+  <div class="card mt"><b>How partner plays work</b>
+  <div class="legend mt6">A partner play is a packaged joint motion that a campaign <b>links to</b> — it is never copied into the campaign. Partner-influenced pipeline is derived from opportunities on campaigns carrying the play, and the count of active plays is the <b>Partner Plays</b> tile on the dashboard (spec 03 §2).</div></div>`;
+}
+function openAsset(a){
+  drawer(a.n,`<span class="badge b-blue">${a.bl}</span> <span class="chip">${a.th}</span>`,`
+  <table><tbody>
+   <tr><th>Type</th><td>${a.type}</td></tr>
+   <tr><th>Source repository</th><td>${a.repo}</td></tr>
+   <tr><th>Version</th><td>${a.ver} (current)</td></tr>
+   <tr><th>Certification</th><td><span class="badge ${a.cert==='Certified'?'b-green':'b-amber'}">${a.cert}</span></td></tr>
+   <tr><th>Reuse</th><td>${a.reuse}× across campaigns</td></tr>
+   <tr><th>Storage</th><td class="muted">${a.src||'Repository link'} — the portal stores metadata and the URL, not the file</td></tr>
+  </tbody></table>
+  <h3 class="mt">Refresh &amp; maintenance</h3>
+  <table><tbody>
+   <tr><th>Asset owner</th><td>${a.owner||'Unassigned'}</td></tr>
+   <tr><th>Refresh cycle</th><td>${a.cycle||12} months</td></tr>
+   <tr><th>Last review</th><td>${a.lastReview||'—'}</td></tr>
+   <tr><th>Next review</th><td>${a.nextReview||'—'} ${a.due?'<span class="badge b-amber">Due</span>':'<span class="badge b-green">On cycle</span>'}</td></tr>
+   <tr><th>Lifecycle state</th><td><span class="badge ${a.state==='Certified'?'b-green':a.state==='In refresh'?'b-amber':'b-gray'}">${a.state||a.cert}</span></td></tr>
+  </tbody></table>
+  <div class="mt6"><button class="btn sm ghost" onclick="alert('Prototype — would open the refresh task and notify the asset owner.')">Request refresh</button>
+  <button class="btn sm ghost" onclick="alert('Prototype — would upload a new version and increment the version number.')">Upload new version</button>
+  <button class="btn sm gray" onclick="alert('Prototype — would retire the asset, keeping it searchable with a Retired badge.')">Retire asset</button></div>
+  <h3 class="mt">Used in campaigns</h3>
+  <div>${CAMPAIGNS.filter(c=>c.theme===a.th).slice(0,3).map(c=>`<span class="chip">${c.n}</span>`).join('')||'<span class="muted">Not yet linked</span>'}</div>
+  <div class="mt"><button class="btn sm ghost">Open in SharePoint ↗</button> <button class="btn sm gray">Link to a campaign</button></div>`);
+}
+function openSolution(s){
+  drawer(s.n,`<span class="badge ${s.cls==='Industry'?'b-teal':s.cls==='Business Line'?'b-violet':'b-blue'}">${s.cls}</span> <span class="muted">${s.bl}</span>`,`
+  <div class="flex"><span class="badge ${s.mat==='Industrialized'?'b-green':'b-amber'}">${s.mat}</span>
+  <span class="muted">Certified &amp; published by the Factory S&amp;A Lead</span></div>
+  <h3 class="mt">Assets (${s.assets})</h3>
+  <table><thead><tr><th>Title</th><th>BL</th><th>Type</th></tr></thead><tbody>
+  ${ASSETS.filter(a=>s.bl.includes(a.bl)||a.th===s.th).slice(0,5).map(a=>`<tr><td>${a.n}</td><td>${a.bl}</td><td>${a.type}</td></tr>`).join('')}
+  </tbody></table>
+  <h3 class="mt">Campaigns using this solution</h3>
+  <div>${CAMPAIGNS.filter(c=>c.sol===s.n).map(c=>`<span class="chip">${c.n}</span>`).join('')||'<span class="muted">—</span>'}</div>
+  <div class="legend mt">Reused ${s.reuse}× · feeds the % industrialized KPI.</div>`);
+}
+function openPartner(p){
+  drawer(p.n,`<span class="badge b-amber">🤝 ${p.p} · ${p.tier}</span> <span class="badge ${p.st==='Active'?'b-green':'b-gray'}">${p.st}</span>`,`
+  <p>${p.vp}</p>
+  <table><tbody>
+   <tr><th>Business line</th><td>${p.bl}</td></tr>
+   <tr><th>Theme</th><td>${p.th}</td></tr>
+   <tr><th>Eligible countries</th><td>${p.cty.map(c=>COUNTRIES.find(x=>x.code===c).name).join(', ')}</td></tr>
+   <tr><th>Capgemini owner</th><td>${p.owner}</td></tr>
+   <tr><th>Linked campaigns</th><td>${p.camp}</td></tr>
+   <tr><th>Influenced pipeline</th><td>${money(p.pipe)}</td></tr>
+  </tbody></table>
+  <h3 class="mt">Campaigns carrying this play</h3>
+  <div>${CAMPAIGNS.filter(c=>c.partner===p.p&&inScope(c.c)).map(c=>`<span class="chip">${c.n}</span>`).join('')||'<span class="muted">—</span>'}</div>
+  <div class="mt"><button class="btn sm ghost">Link to a campaign</button> <button class="btn sm gray">View linked assets</button></div>`);
+}
+
+/* =========================== TRIGGERS RADAR (v3.0) =========================== */
+/* Opportunity sensing engine: what happened / why it matters / what next. */
+let radarFilter={cat:'Technology Initiatives',country:'All',sector:'All',rel:'All',q:''};
+let selectedSignal=null;
+const sigScore=s=>Math.round(s.sc.acct*0.24+s.sc.ind*0.14+s.sc.str*0.20+s.sc.camp*0.14+s.sc.pipe*0.14+s.sc.cred*0.14);
+
+VIEWS.radar=()=>{
+  const tab=subview.radar||'feed';
+  return `<h2 class="page">Triggers Radar</h2>
+  <p class="sub">Opportunity sensing engine \u2014 seven vertical trigger categories, AI-scored signals, recommended Smart Agents and next best actions</p>
+  <div class="tabs" id="rtabs">
+    <button data-t="feed" class="${tab==='feed'?'active':''}">Signal radar</button>
+    <button data-t="cats" class="${tab==='cats'?'active':''}">Categories &amp; agent mapping</button>
+    <button data-t="engine" class="${tab==='engine'?'active':''}">Radar engine</button>
+  </div>
+  <div id="rbody"></div>`;
+};
+afterRender.radar=()=>{
+  const tabs=document.getElementById('rtabs'),body=document.getElementById('rbody');
+  const draw=(t)=>{subview.radar=t;
+    body.innerHTML = t==='feed'?radarFeed():t==='cats'?radarCats():radarEngine();};
+  draw(subview.radar||'feed');
+  tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');draw(b.dataset.t);});
+};
+function radarScoped(){return SIGNALS.filter(s=>inScope(s.c));}
+function radarMatch(s){
+  const f=radarFilter;
+  if(f.cat!=='All' && s.cat!==f.cat) return false;
+  if(f.country!=='All' && s.c!==f.country) return false;
+  if(f.sector!=='All' && s.sector!==f.sector) return false;
+  if(f.rel!=='All' && s.rel!==f.rel) return false;
+  if(f.q && !(s.acct+' '+s.title+' '+s.hyp+' '+s.src).toLowerCase().includes(f.q.toLowerCase())) return false;
+  return true;
+}
+function setRadar(k,v){radarFilter[k]=v;selectedSignal=null;document.getElementById('rbody').innerHTML=radarFeed();}
+function radarFeed(){
+  const scoped=radarScoped();
+  const list=scoped.filter(radarMatch).sort((a,b)=>sigScore(b)-sigScore(a));
+  if(!selectedSignal||!list.includes(selectedSignal)) selectedSignal=list[0]||null;
+  const sectors=[...new Set(scoped.map(s=>s.sector))].sort();
+  const ctys=scopeCountries();
+  /* Column 1 \u2014 trigger categories, one active at a time */
+  const col1=`<div class="catlist">
+    <div class="nav" style="padding:0"><div class="sect" style="padding:6px 10px 4px;color:var(--mut)">Trigger categories</div></div>
+    <a class="${radarFilter.cat==='All'?'on':''}" onclick="setRadar('cat','All')"><span>\u25CE</span>All categories<span class="ct">${scoped.length}</span></a>
+    ${TRIGGER_CATS.map(c=>`<a class="${radarFilter.cat===c.k?'on':''}" onclick="setRadar('cat',${JSON.stringify(c.k).replace(/"/g,'&quot;')})">
+      <span>${c.ic}</span>${c.k}<span class="ct">${scoped.filter(s=>s.cat===c.k).length}</span></a>`).join('')}
+  </div>`;
+  /* Column 2 \u2014 vertical signal feed */
+  const col2=`<div>
+    <div class="flex wrapf mb" style="gap:8px">
+      <select class="t" style="width:auto" onchange="setRadar('country',this.value)">
+        <option value="All">Country: all in scope</option>
+        ${ctys.map(c=>`<option value="${c}" ${radarFilter.country===c?'selected':''}>${COUNTRIES.find(x=>x.code===c).name}</option>`).join('')}
+      </select>
+      <select class="t" style="width:auto" onchange="setRadar('sector',this.value)">
+        <option value="All">Sector: all</option>
+        ${sectors.map(x=>`<option ${radarFilter.sector===x?'selected':''}>${x}</option>`).join('')}
+      </select>
+      <select class="t" style="width:auto" onchange="setRadar('rel',this.value)">
+        <option value="All">Relevance: all</option>
+        ${RELS.map(x=>`<option ${radarFilter.rel===x?'selected':''}>${x}</option>`).join('')}
+      </select>
+      <input class="t" style="width:auto;flex:1;min-width:180px" placeholder="\u2315 Search account, signal or source\u2026" value="${radarFilter.q}" oninput="radarFilter.q=this.value;document.getElementById('rbody').innerHTML=radarFeed()">
+    </div>
+    <div class="muted mb" style="font-size:12.3px">${list.length} signal${list.length===1?'':'s'} \u00b7 ${scopeLabel()} \u00b7 ranked by composite score \u00b7 daily ingestion, last run 11 Aug 2026 02:00 CET</div>
+    <div class="feed">${list.map(s=>`<div class="scard ${selectedSignal===s?'sel':''}" onclick="selectSignal('${s.id}')">
+      <div class="flex between wrapf">
+        <div><b>${s.acct}</b> <span class="muted" style="font-size:11.5px">\u00b7 ${COUNTRIES.find(c=>c.code===s.c).name} \u00b7 ${s.sector}</span></div>
+        <div><span class="badge ${RELCLS[s.rel]}">${s.rel}</span> <span class="badge b-gray">${sigScore(s)}</span></div>
+      </div>
+      <div class="st">${s.title}</div>
+      <div class="flex wrapf" style="gap:6px">
+        <span class="chip" style="font-size:10.5px">${(TRIGGER_CATS.find(c=>c.k===s.cat)||{ic:''}).ic} ${s.cat}</span>
+        <span class="chip" style="font-size:10.5px">\U0001F916 ${s.agents[0]}</span>
+        <span class="legend" style="margin-left:auto">${s.src} \u00b7 ${s.date}</span>
+      </div>
+      <div class="flex wrapf mt6">
+        <button class="btn sm ghost" onclick="event.stopPropagation();selectSignal('${s.id}')">In depth</button>
+        <button class="btn sm ghost" onclick="event.stopPropagation();go('agents')">Smart Agents</button>
+        <button class="btn sm" onclick="event.stopPropagation();sigAction('${s.id}')">Next best action</button>
+      </div>
+      <div id="out_${s.id}"></div>
+    </div>`).join('')||'<div class="card muted">No signals match these filters.</div>'}</div>
+  </div>`;
+  /* Column 3 \u2014 signal detail */
+  const col3=selectedSignal?signalDetail(selectedSignal):'<div class="detail muted">Select a signal to see the detail view.</div>';
+  return `<div class="radar3">${col1}${col2}${col3}</div>
+  <div class="legend mt">Signals are AI-summarised and AI-scored. Review before any client-facing use. Source licensing must be cleared with Procurement; anything touching personal data goes to the Data Privacy Officer first (spec 04).</div>`;
+}
+function selectSignal(id){selectedSignal=SIGNALS.find(s=>s.id===id);document.getElementById('rbody').innerHTML=radarFeed();}
+function signalDetail(s){
+  const bar=(l,v)=>`<div class="sbar"><span>${l}</span><div class="bar"><i style="width:${v}%"></i></div><span style="width:26px;text-align:right">${v}</span></div>`;
+  return `<div class="detail">
+    <div class="flex between"><b style="font-size:15px">${s.acct}</b><span class="badge ${RELCLS[s.rel]}">${s.rel}</span></div>
+    <div class="muted" style="font-size:12px">${COUNTRIES.find(c=>c.code===s.c).name} \u00b7 ${s.sector} \u00b7 <code style="font-size:11px">${s.id}</code></div>
+    <h4>Signal category</h4><div>${(TRIGGER_CATS.find(c=>c.k===s.cat)||{ic:''}).ic} ${s.cat}</div>
+    <h4>What happened</h4><div style="font-weight:600">${s.title}</div>
+    <h4>Source \u00b7 published</h4><div class="muted" style="font-size:12.3px">${s.src} \u00b7 ${s.date}</div>
+    <h4>Opportunity hypothesis <span class="badge b-amber" style="text-transform:none;letter-spacing:0">AI</span></h4>
+    <div style="font-size:12.6px">${s.hyp}</div>
+    <h4>Relevance scoring</h4>
+    ${bar('Account',s.sc.acct)}${bar('Industry',s.sc.ind)}${bar('Strength',s.sc.str)}${bar('Campaign',s.sc.camp)}${bar('Pipeline',s.sc.pipe)}${bar('Credibility',s.sc.cred)}
+    <div class="legend mt6">Composite ${sigScore(s)} \u00b7 six scoring inputs (spec 04 \u00a74).</div>
+    <h4>Recommended agents</h4>
+    <div>${s.agents.map(a=>`<span class="chip clk" onclick="go('agents')">\U0001F916 ${a}</span>`).join('')}</div>
+    <h4>Recommended next action</h4><div style="font-size:12.6px">${s.action}</div>
+    <div class="mt"><button class="btn sm" onclick="sigAction('${s.id}')">Action this signal</button>
+    <button class="btn sm ghost" onclick="openSellerInput('${s.acct}')">Assign to owner</button>
+    <button class="btn sm gray" onclick="sigAction('${s.id}','Dismissed')">Dismiss</button></div>
+    <h4>Signal lifecycle</h4>
+    <div class="lifecycle">${SIG_LIFECYCLE.map((x,i)=>`<b style="${i<2?'background:#d9f2e4':''}">${x}</b>${i<SIG_LIFECYCLE.length-1?'\u2192':''}`).join('')}</div>
+  </div>`;
+}
+function sigAction(id,what){
+  const el=document.getElementById('out_'+id);
+  const s=SIGNALS.find(x=>x.id===id);
+  if(el) el.innerHTML=`<div class="mt6"><span class="badge b-green">${what||'Actioned'}</span> <span class="legend">${what==='Dismissed'?'reason captured \u00b7 signal closed':s.action}</span></div>`;
+}
+function radarCats(){
+  return `<div class="card mb"><h3>Seven vertical trigger categories</h3>
+  <p class="muted" style="font-size:12.5px;margin-top:-6px">Each category carries its own example signals and its own default Smart Agent recommendations. Only one category is active at a time in the feed.</p>
+  <div style="overflow-x:auto"><table><thead><tr><th>Category</th><th>Example signals</th><th>Recommended agents</th><th>Signals in scope</th></tr></thead><tbody>
+  ${TRIGGER_CATS.map(c=>`<tr><td><b>${c.ic} ${c.k}</b></td>
+    <td>${c.ex.map(e=>`<span class="chip" style="font-size:10.5px">${e}</span>`).join('')}</td>
+    <td>${c.agents.map(a=>`<span class="chip clk" onclick="go('agents')" style="font-size:10.5px">\U0001F916 ${a}</span>`).join('')}</td>
+    <td>${radarScoped().filter(s=>s.cat===c.k).length}</td></tr>`).join('')}
+  </tbody></table></div></div>
+  <div class="card"><h3>Signal classification</h3>
+  <p class="muted" style="font-size:12.5px;margin-top:-6px">Signals are classified Critical / High / Medium / Low from six scoring inputs.</p>
+  <div class="row mb">${RELS.map(r=>`<div class="kpi" style="flex:1"><div class="lab">${r}</div><div class="val">${radarScoped().filter(s=>s.rel===r).length}</div><div class="meta">signals in ${scopeLabel()}</div></div>`).join('')}</div>
+  <div>${['Account relevance','Industry relevance','Signal strength','Campaign alignment','Pipeline alignment','Source credibility'].map(x=>`<span class="chip">${x}</span>`).join('')}</div></div>`;
+}
+/* ---- Radar engine configuration v3.1 (15 Sept 2026) ---- */
+const RADAR_SOURCES=[
+  {k:'Company websites',d:'Newsrooms, investor pages and strategy statements',on:true},
+  {k:'Annual reports & filings',d:'Published financial statements and regulatory filings',on:true},
+  {k:'Press releases',d:'Wire services and corporate announcements',on:true},
+  {k:'News sources',d:'National and trade press in the country language',on:true},
+  {k:'Public tenders',d:'National and EU tender portals',on:true},
+  {k:'Job boards / hiring sites',d:'Role postings used as a technology-initiative proxy',on:true},
+  {k:'Leadership announcements',d:'Executive appointment and board change notices',on:true},
+  {k:'Partner & analyst feeds',d:'Partner alliance notes and analyst commentary',on:false},
+  {k:'Social / LinkedIn signals',d:'Public executive posting activity',on:false},
+];
+let radarCfg={set:'Target prospects (Pipeline Explorer)',sources:RADAR_SOURCES.map(x=>x.on),freq:'Daily',time:'05:00 CET',window:'Last 14 days',minScore:70,autoLink:true};
+const RADAR_SETS=['Target prospects (Pipeline Explorer)','Active campaign accounts only','Qualified leads only','Full mid-market master list','Custom account list (upload)'];
+function setCfg(k,v){radarCfg[k]=v;const b=document.getElementById('rbody');if(b)b.innerHTML=radarEngine();}
+function toggleSource(i){radarCfg.sources[i]=!radarCfg.sources[i];const b=document.getElementById('rbody');if(b)b.innerHTML=radarEngine();}
+function saveRadarCfg(){
+  const on=RADAR_SOURCES.filter((x,i)=>radarCfg.sources[i]).length;
+  alert('Prototype \u2014 would save the radar engine configuration for '+scopeLabel()+':\\n\\n'
+    +'\u2022 Client set: '+radarCfg.set+'\\n'
+    +'\u2022 Sources enabled: '+on+' of '+RADAR_SOURCES.length+'\\n'
+    +'\u2022 Batch: '+radarCfg.freq+' at '+radarCfg.time+' \u00b7 '+radarCfg.window+'\\n'
+    +'\u2022 Minimum relevance score: '+radarCfg.minScore
+    +'\\n\\nConfiguration is per country and restricted to Admin and the Factory Agentic Lead.');
+}
+function radarConfig(){
+  const on=RADAR_SOURCES.filter((x,i)=>radarCfg.sources[i]).length;
+  return `<div class="card mb"><div class="flex between wrapf mb">
+    <div><h3 style="margin:0">Radar engine configuration \u2014 ${scopeLabel()}</h3>
+    <p class="muted" style="font-size:12.5px;margin:4px 0 0">Configure which clients the engine watches, which sources it collects from and when the batch runs.</p></div>
+    <span class="badge b-violet">\U0001F512 Admin &amp; Factory Agentic Lead only</span>
+  </div>
+  <div class="f2">
+    <div><label class="fl">1 \u00b7 Prospect client set *</label>
+      <select class="t" onchange="setCfg('set',this.value)">${RADAR_SETS.map(x=>`<option ${radarCfg.set===x?'selected':''}>${x}</option>`).join('')}</select>
+      <div class="legend mt6">Defines the account universe the engine scans. Row-level security still applies \u2014 sellers only see signals for their own country.</div></div>
+    <div><label class="fl">3 \u00b7 Batch schedule *</label>
+      <div class="flex wrapf" style="gap:6px">
+        <select class="t" style="width:auto;flex:1" onchange="setCfg('freq',this.value)">${['Daily','Twice daily','Every 2 days','Weekly'].map(x=>`<option ${radarCfg.freq===x?'selected':''}>${x}</option>`).join('')}</select>
+        <select class="t" style="width:auto;flex:1" onchange="setCfg('time',this.value)">${['03:00 CET','05:00 CET','07:00 CET','12:00 CET','22:00 CET'].map(x=>`<option ${radarCfg.time===x?'selected':''}>${x}</option>`).join('')}</select>
+      </div>
+      <div class="flex wrapf mt6" style="gap:6px">
+        <select class="t" style="width:auto;flex:1" onchange="setCfg('window',this.value)">${['Last 7 days','Last 14 days','Last 30 days','Last 90 days'].map(x=>`<option ${radarCfg.window===x?'selected':''}>${x}</option>`).join('')}</select>
+        <select class="t" style="width:auto;flex:1" onchange="setCfg('minScore',+this.value)">${[50,60,70,80,90].map(x=>`<option value="${x}" ${radarCfg.minScore===x?'selected':''}>Min relevance score ${x}</option>`).join('')}</select>
+      </div>
+      <div class="legend mt6">Next scheduled run: ${radarCfg.freq} at ${radarCfg.time} \u00b7 lookback ${radarCfg.window}.</div></div>
+  </div>
+  <label class="fl mt">2 \u00b7 Sources <span style="text-transform:none">(${on} of ${RADAR_SOURCES.length} enabled)</span></label>
+  <div style="overflow-x:auto"><table><thead><tr><th style="width:90px">Enabled</th><th>Source</th><th>What it collects</th></tr></thead><tbody>
+  ${RADAR_SOURCES.map((x,i)=>`<tr><td><button class="btn sm ${radarCfg.sources[i]?'':'gray'}" onclick="toggleSource(${i})">${radarCfg.sources[i]?'ON':'OFF'}</button></td>
+    <td><b>${x.k}</b></td><td class="muted">${x.d}</td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="flex between wrapf mt" style="gap:8px">
+    <label style="font-size:12.5px;cursor:pointer"><input type="checkbox" ${radarCfg.autoLink?'checked':''} onchange="setCfg('autoLink',this.checked)"> Auto-link qualifying signals to the matching active campaign</label>
+    <div><button class="btn" onclick="saveRadarCfg()">Save configuration</button>
+    <button class="btn ghost" onclick="alert('Prototype \u2014 would trigger an immediate ad-hoc collection run for ${scopeLabel()}.')">\u25B6 Run now</button></div>
+  </div>
+  <div class="legend mt">Configuration is held per country so each market can tune its source mix and client set. The seller-facing radar feed remains deliberately limited to four filters (spec 04).</div></div>`;
+}
+function radarEngine(){
+  return radarConfig()+`<div class="card mb"><h3>How a signal is produced</h3>
+  <p class="muted" style="font-size:12.5px;margin-top:-6px">Daily batch. Every displayed signal carries its source and publication date; AI-generated fields are labelled.</p>
+  <div class="flow">${RADAR_PIPE.map(x=>`<div class="fs"><b>${x.ic} ${x.s}</b><span style="font-size:12px;color:var(--mut)">${x.d}</span></div>`).join('')}</div></div>
+  <div class="row">
+    <div class="card" style="flex:1;min-width:300px"><h3>Signal lifecycle</h3>
+      <div class="lifecycle">${SIG_LIFECYCLE.map((x,i)=>`<b>${x}</b>${i<SIG_LIFECYCLE.length-1?'\u2192':''}`).join('')}</div>
+      <div class="legend mt">A signal that reaches <b>Campaign / Opportunity</b> is linked to a campaign or a Pipeline Explorer record, which is how radar contribution becomes measurable.</div>
+    </div>
+    <div class="card" style="flex:1;min-width:300px"><h3>MVP acceptance criteria</h3>
+      <table><tbody>${['Seven trigger categories available','Daily signal ingestion','AI categorisation and summarisation','Vertical signal feed','Signal detail panel','Recommended Smart Agents','Recommended next best actions','Row-level security enforced (country first)'].map(x=>`<tr><td>\u2713 ${x}</td></tr>`).join('')}</tbody></table>
+    </div>
+  </div>
+  <div class="card mt"><h3>Radar coverage by country</h3>
+  <table><thead><tr><th>Country</th><th>Signals</th><th>Critical</th><th>High</th><th>Top category</th></tr></thead><tbody>
+  ${scopeCountries().map(c=>{const l=SIGNALS.filter(s=>s.c===c);
+    const top=TRIGGER_CATS.map(t=>[t.k,l.filter(s=>s.cat===t.k).length]).sort((a,b)=>b[1]-a[1])[0];
+    return `<tr><td>${COUNTRIES.find(x=>x.code===c).name}</td><td>${l.length}</td><td>${l.filter(s=>s.rel==='Critical').length}</td><td>${l.filter(s=>s.rel==='High').length}</td><td class="muted">${top&&top[1]?top[0]:'\u2014'}</td></tr>`;}).join('')}
+  </tbody></table>
+  <div class="legend mt">Configurable per-country radar engines (source mix, client lists, AI focus) remain available to Admin and the Factory Agentic Lead \u2014 the seller-facing experience is deliberately limited to four filters.</div></div>`;
+}
+
+/* =========================== SMART AGENTS (v3.0) =========================== */
+let agentFilter={stage:'All',team:'All',q:''};
+VIEWS.agents=()=>{
+  return `<h2 class="page">Smart Agents</h2>
+  <p class="sub">A curated launchpad into the existing Copilot / TLC agent estate, organised by sales lifecycle stage</p>
+  <div class="card mb" style="background:#f0f7fb;border-color:#cde3f0">
+    <div class="flex between wrapf"><div><b>Agents run in Copilot / TLC, not in the portal.</b>
+    <div class="legend mt6">The portal is the front door: it tells you which agent to use, when, and takes you there \u2014 and the Triggers Radar recommends the right agent for each signal. Embedded execution, output capture and full usage tracking are Phase 2 (spec 07, 14).</div></div>
+    <span class="badge b-amber">AI-generated output \u2014 review before client use</span></div>
+  </div>
+  <div class="flex wrapf mb" style="gap:8px">
+    <select class="t" style="width:auto" onchange="agentFilter.stage=this.value;render()">
+      <option value="All">Lifecycle stage: all</option>
+      ${AGENT_STAGES.map(x=>`<option ${agentFilter.stage===x.k?'selected':''}>${x.k}</option>`).join('')}
+    </select>
+    <select class="t" style="width:auto" onchange="agentFilter.team=this.value;render()">
+      <option value="All">Owning team: all</option>
+      ${AGENT_TEAMS.map(x=>`<option ${agentFilter.team===x?'selected':''}>${x}</option>`).join('')}
+    </select>
+    <input class="t" style="width:auto;flex:1;min-width:200px" placeholder="\u2315 Search agent name or purpose\u2026" value="${agentFilter.q}" oninput="agentFilter.q=this.value;render()">
+    <span class="legend" style="align-self:center">${uniqueAgents().length} distinct agents \u00b7 ${AGENTS.length} stage placements</span>
+    <button class="btn sm" onclick="registerAgent()">+ Register an external agent</button>
+  </div>
+  ${AGENT_STAGES.filter(st=>agentFilter.stage==='All'||agentFilter.stage===st.k).map(st=>{
+    const list=AGENTS.filter(a=>a.st===st.k)
+      .filter(a=>agentFilter.team==='All'||a.own===agentFilter.team)
+      .filter(a=>!agentFilter.q||(a.n+' '+a.d+' '+a.u).toLowerCase().includes(agentFilter.q.toLowerCase()));
+    if(!list.length) return '';
+    return `<h3 style="margin:20px 0 3px;font-size:14.5px">${st.ic} ${st.k} <span class="legend" style="font-weight:400">\u00b7 ${list.length} agent${list.length>1?'s':''}</span></h3>
+    <p class="legend" style="margin:0 0 10px">${st.sub}</p>
+    <div class="cols">${list.map(a=>`<div class="agentcard">
+      <div class="flex between mb"><span class="badge b-violet">${a.own}</span><span class="legend">${a.registered?'<span class="badge b-teal">Registered</span> ':''}${a.launches} launches</span></div>
+      <b>${a.n}</b>
+      <div style="font-size:12.2px;color:var(--mut);margin:6px 0 9px">${a.d}</div>
+      <div class="use">Best used for: ${a.u}</div>
+      <div class="flex between" style="margin-top:auto">
+      <span class="legend">${signalsFor(a.n)?signalsFor(a.n)+' live signal'+(signalsFor(a.n)>1?'s':''):'\u00a0'}</span>
+      <button class="btn sm" onclick="launchAgent('${a.n.replace(/'/g,"\\'")}','${a.own}')">Launch \u2197</button></div></div>`).join('')}</div>`;
+  }).join('')}
+  <div class="card mt"><b>Agent utilization on the dashboard</b>
+  <div class="legend mt6">Usage is hard to measure while agents launch externally. MVP approximates it from launch clicks in the portal and labels it as an approximation. Open action (spec 7.3): confirm whether to keep the approximation or show agent count only \u2014 owner Vikas Rajak.</div></div>`;
+};
+/* ---- Register an external agent v3.1 (15 Sept 2026) ---- */
+function registerAgent(){
+  drawer('Register an external agent','<span class="badge b-violet">New agent</span> <span class="muted">Adds the agent to the launchpad</span>',`
+  <div class="card mb" style="background:#f7f9fb"><b style="font-size:12.5px">\u2139\uFE0F The portal links, it does not host</b>
+  <div class="legend mt6">Registering an agent adds it to the curated launchpad and makes it selectable as a recommended agent for radar trigger categories. The agent continues to run in Copilot / TLC \u2014 the portal stores the name, purpose, owning team and the launch link.</div></div>
+  <div class="f2">
+    <div><label class="fl">Agent name *</label><input class="t" id="ra_n" placeholder="e.g. Intelio"></div>
+    <div><label class="fl">Owning team *</label><select class="t" id="ra_own">${AGENT_TEAMS.map(t=>`<option>${t}</option>`).join('')}<option>Other \u2014 specify in purpose</option></select></div>
+    <div><label class="fl">Sales lifecycle stage *</label><select class="t" id="ra_st">${AGENT_STAGES.map(x=>`<option>${x.k}</option>`).join('')}</select></div>
+    <div><label class="fl">Platform *</label><select class="t" id="ra_plat">${['Microsoft Copilot','TLC','Copilot Studio','External / partner hosted'].map(x=>`<option>${x}</option>`).join('')}</select></div>
+  </div>
+  <label class="fl mt">Co-pilot / agent link *</label>
+  <input class="t" id="ra_url" placeholder="https://copilot.microsoft.com/\u2026 or the TLC agent URL">
+  <div class="mt6"><button class="btn sm ghost" onclick="alert('Prototype \u2014 would confirm the link resolves and that the current user is licensed for this agent.')">Test link &amp; access</button></div>
+  <label class="fl mt">What the agent does *</label><textarea class="t" id="ra_d" rows="3" placeholder="One or two sentences describing the agent output"></textarea>
+  <label class="fl mt">Best used for *</label><textarea class="t" id="ra_u" rows="2" placeholder="When a seller should reach for this agent"></textarea>
+  <div class="f2 mt">
+    <div><label class="fl">Recommend for trigger categories</label>
+      <div>${TRIGGER_CATS.map(t=>`<span class="chip clk" onclick="this.classList.toggle('on')">${t.ic} ${t.k}</span>`).join('')}</div></div>
+    <div><label class="fl">Visibility</label><select class="t" id="ra_vis"><option>NCE \u2014 all countries</option>${BUS.map(b=>`<option>${b} (BU)</option>`).join('')}${COUNTRIES.map(c=>`<option>${c.name}</option>`).join('')}</select>
+      <div class="legend mt6">Restrict where the agent appears if it is language- or market-specific.</div></div>
+  </div>
+  <div class="mt"><button class="btn" onclick="saveAgent()">Register agent</button>
+  <button class="btn gray" onclick="closeDrawer()">Cancel</button></div>
+  <div class="legend mt">Registered agents are reviewed by the Factory Agentic Lead before they appear to all sellers. Phase 2 (spec 08): register the agent's endpoint and schema so it can be invoked in-portal with RLS-scoped context.</div>`);
+}
+function saveAgent(){
+  const g=x=>{const e=document.getElementById(x);return e?e.value.trim():'';};
+  const n=g('ra_n'), url=g('ra_url');
+  if(!n){alert('Agent name is mandatory.');return;}
+  if(!url){alert('A co-pilot / agent link is mandatory \u2014 the launchpad needs somewhere to send the seller.');return;}
+  AGENTS.push({n:n,st:g('ra_st'),own:g('ra_own'),d:g('ra_d')||'Externally registered agent.',u:g('ra_u')||'\u2014',launches:0,url:url,plat:g('ra_plat'),registered:true});
+  closeDrawer(); render();
+}
+function uniqueAgents(){return [...new Set(AGENTS.map(a=>a.n))];}
+function signalsFor(name){return SIGNALS.filter(s=>inScope(s.c)&&s.agents.includes(name)).length;}
+function launchAgent(n,own){
+  const sigs=SIGNALS.filter(s=>inScope(s.c)&&s.agents.includes(n));
+  drawer(n,`<span class="badge b-violet">${own}</span> <span class="muted">Smart Agent</span>`,`
+  <p>Opening <b>${n}</b>\u2026</p>
+  <div class="output">In the live portal this button opens the agent in a new tab, carrying the account, signal or opportunity identifier where the agent supports it.
+
+The agent runs in Copilot / TLC. Its output stays there \u2014 the portal does not capture it in MVP.</div>
+  <div class="mt"><span class="badge b-amber">AI-generated \u2014 review before client-facing use</span></div>
+  ${sigs.length?`<h3 class="mt">Live radar signals recommending this agent (${sigs.length})</h3>
+  <table><thead><tr><th>Account</th><th>Category</th><th>Relevance</th></tr></thead><tbody>
+  ${sigs.map(s=>`<tr class="clk" onclick="closeDrawer();go('radar');setTimeout(()=>selectSignal('${s.id}'),60)"><td>${s.acct}</td><td class="muted">${s.cat}</td><td><span class="badge ${RELCLS[s.rel]}">${s.rel}</span></td></tr>`).join('')}
+  </tbody></table>`:''}
+  <div class="legend mt">Phase 2 (spec 08): register the agent's endpoint and schema so it can be invoked in-portal with RLS-scoped context, and its output saved to the account, opportunity or campaign.</div>`);
+}
+
+/* =========================== SELLER INPUT =========================== */
+function openSellerInput(prefill){
+  const camps=CAMPAIGNS.filter(c=>inScope(c.c)&&['Active','Approved'].includes(c.status));
+  const names=[...new Set([...PROSPECTS.filter(p=>inScope(p.c)).map(p=>p.n),...ACCOUNTS.filter(a=>inScope(a.c)).map(a=>a.n)])];
+  drawer('Log an interaction','<span class="badge b-blue">Seller Input</span> <span class="muted">One screen · feeds every module</span>',`
+  <p class="muted" style="font-size:12.5px;margin-top:0">Spec 13. Capture it once here and the prospect stage, engagement log, campaign metrics and dashboard all update. Nothing is re-entered anywhere else.</p>
+
+  <label class="fl">① Campaign <span style="text-transform:none;font-weight:400">(optional — leave blank if not campaign-driven)</span></label>
+  <select class="t"><option>— none —</option>${camps.map(c=>`<option>${c.n}</option>`).join('')}</select>
+
+  <label class="fl">② Customer / prospect</label>
+  <select class="t" id="siacct">${names.map(n=>`<option ${n===prefill?'selected':''}>${n}</option>`).join('')}<option>＋ Create new prospect…</option></select>
+  <div class="legend mt6">Not found? Creating inline mints a Prospect ID and drops the record into <b>Target / Identified</b>.</div>
+
+  <label class="fl">③ Interaction</label>
+  <div class="f2">
+    <div><select class="t"><option>Meeting delivered</option><option>Meeting scheduled</option><option>Outreach</option><option>Event</option><option>Webinar</option><option>Inbound</option></select></div>
+    <div><input class="t" value="10 Aug 2026"></div>
+  </div>
+  <div class="f2">
+    <div><label class="fl">Attendees</label><input class="t" placeholder="e.g. CIO, Head of Applications"></div>
+    <div><label class="fl">CXO level?</label><select class="t"><option>Yes</option><option selected>No</option></select></div>
+  </div>
+  <label class="fl">Note</label>
+  <textarea class="t" rows="2" placeholder="What happened, in one or two lines"></textarea>
+
+  <label class="fl">④ Next step</label>
+  <div class="f2">
+    <div><input class="t" placeholder="e.g. Send value case and book workshop"></div>
+    <div><input class="t" placeholder="Due date"></div>
+  </div>
+
+  <label class="fl">⑤ Resulting status</label>
+  <select class="t" id="sistage">${PSTAGES.slice(0,6).map((s,i)=>`<option ${i===4?'selected':''}>${s}</option>`).join('')}</select>
+
+  <div class="mt"><button class="btn" onclick="submitSellerInput()">Submit</button>
+  <button class="btn gray" onclick="closeDrawer()">Cancel</button></div>
+  <div id="siout"></div>`);
+}
+function submitSellerInput(){
+  const acct=document.getElementById('siacct').value, st=document.getElementById('sistage').value;
+  const out=document.getElementById('siout');
+  out.innerHTML=`<div class="mt"><div class="output"><b>Submitted — propagated in one action</b>
+
+✓ Prospect / account   ${acct} → stage <b>${st}</b> (stage history updated)
+✓ Engagement log       interaction recorded → feeds meetings booked / delivered
+✓ Campaign metrics     accounts engaged, meetings, CXO reach, qualified leads
+✓ Dashboard            meetings generated, targeted / active accounts
+${st==='Qualified Lead'?'\n→ Qualified Lead: prompt to create a Thor Sales Stage 2 opportunity.':''}</div>
+  <div class="legend mt">No other screen will ask for any of this again (spec 13 §2).</div></div>`;
+}
+
+/* ---------------- Drawer ---------------- */
+function drawer(title,subtitle,html){
+  document.getElementById('drawer').innerHTML=
+    `<div class="dh"><div><h3>${title}</h3><div style="margin-top:4px">${subtitle}</div></div><div class="x" onclick="closeDrawer()">×</div></div><div class="db">${html}</div>`;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('dbg').classList.add('open');
+  document.getElementById('drawer').scrollTop=0;
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('dbg').classList.remove('open');}
+
+/* ---------------- init ---------------- */
+document.getElementById('role').onchange=()=>{
+  const r=document.getElementById('role').value;
+  document.getElementById('ava').textContent=r.replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+};
+buildScopeSelect();
+buildNav();
+render();
+</script>
+</body>
+</html>
