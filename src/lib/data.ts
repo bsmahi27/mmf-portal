@@ -78,7 +78,6 @@ export const PROSPECTS: Prospect[] = [
   { id: "PRS-NO-00033", n: "Baltic Freight Lines", bu: "NO", ind: "Transport", tcv: 2.6, st: 0, own: "S. Lindqvist", sign: "Q3-2027", src: "Manual", batch: "—", qual: "Identified", country: "Sweden" },
   { id: "PRS-NO-00045", n: "Helsinki Financial Services", bu: "NO", ind: "Financial Services", tcv: 3.9, st: 4, own: "A. Koskinen", sign: "Q4-2026", src: "Radar trigger", batch: "—", qual: "Qualified", country: "Finland" },
   { id: "PRS-NO-00051", n: "CopenTech Automotive", bu: "NO", ind: "Automotive", tcv: 2.1, st: 1, own: "N. Holm", sign: "Q2-2027", src: "Upload", batch: "BATCH-0004", qual: "In research", country: "Denmark" },
-  { id: "PRS-UK-00019", n: "Midland Life Sciences", bu: "UK", ind: "Life Sciences", tcv: 7.5, st: 6, own: "R. Patel", sign: "Q3-2026", src: "Campaign", batch: "—", qual: "Converted", oppId: "0061t00000CyzL9" },
   { id: "PRS-NL-00012", n: "Amstel Transport Group", bu: "NL", ind: "Transport", tcv: 1.4, st: 2, own: "M. de Vries", sign: "Q2-2027", src: "Manual", batch: "—", qual: "Contacted" },
   { id: "PRS-NL-00021", n: "Van Oord Logistics", bu: "NL", ind: "Transport", tcv: 2.4, st: 0, own: "J. Bakker", sign: "Q1-2027", src: "Upload", batch: "BATCH-0005", qual: "Identified" },
   { id: "PRS-NL-00022", n: "Amstel Retail Group", bu: "NL", ind: "Retail", tcv: 1.8, st: 2, own: "J. Bakker", sign: "Q4-2026", src: "Campaign", batch: "—", qual: "Contacted" },
@@ -130,7 +129,6 @@ export const BATCH_RECORDS: BatchRecord[] = [
 
 export const OPPS: Opp[] = [
   { id: "0061t00000AbdK2", n: "Rheinwerk Industrial — Cost Takeout Programme", acct: "Rheinwerk Industrial", bu: "DE", ind: "Manufacturing", val: 6.8, stage: "Proposal", own: "T. Schmidt", close: "15 Nov 2026", status: "Open", mm: true, sol: "SAP S/4 Migration", prob: 65, comp: "Accenture", pid: "PRS-DE-00042" },
-  { id: "0061t00000CyzL9", n: "Midland Life Sciences — Digital Quality Platform", acct: "Midland Life Sciences", bu: "UK", ind: "Life Sciences", val: 7.5, stage: "Closed Won", own: "R. Patel", close: "20 Aug 2026", status: "Won", mm: true, sol: "Quality & Compliance Accelerator", prob: 100, comp: "—", pid: "PRS-UK-00019" },
   { id: "0061t00000DfeM3", n: "Nordkraft Energy — Grid Modernization", acct: "Nordkraft Energy", bu: "NO", ind: "E&U", val: 5.1, stage: "Discovery", own: "L. Berg", close: "10 Dec 2026", status: "Open", mm: false, sol: "—", prob: 30, comp: "TCS", country: "Norway" },
   { id: "0061t00000EghN4", n: "Delta Retail Group — Commerce Platform Renewal", acct: "Delta Retail Group", bu: "UK", ind: "Retail", val: 3.2, stage: "Qualify", own: "R. Patel", close: "28 Feb 2027", status: "Open", mm: false, sol: "Retail Commerce Accelerator", prob: 20, comp: "—" },
   { id: "0061t00000FhiO5", n: "Amstel Transport Group — Fleet Analytics", acct: "Amstel Transport Group", bu: "NL", ind: "Transport", val: 2.0, stage: "Negotiation", own: "M. de Vries", close: "30 Sep 2026", status: "Open", mm: true, sol: "Transport Analytics Suite", prob: 75, comp: "Infosys" },
