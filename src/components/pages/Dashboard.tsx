@@ -1,10 +1,10 @@
 "use client";
 import React, { useState } from "react";
 import {
-  AGENT_USAGE, BUS, CAMPAIGNS, ENGINES, INTERACTIONS, KPI, PROSPECTS, ACCOUNTS, OPPS, CAMPAIGNS as CAMPS,
+  AGENTS, AGENT_USAGE, BUS, CAMPAIGNS, ENGINES, INTERACTIONS, KPI, KPI_COUNTRY, PARTNER_PLAYS, PROSPECTS, ACCOUNTS, OPPS, SIGNALS, CAMPAIGNS as CAMPS,
 } from "@/lib/data";
 import { can, inScope, kpiFor, pctColor, scopeLabel, stars, useApp } from "@/lib/state";
-import { Badge, Kpi, Ring, Tabs } from "@/components/ui";
+import { Badge, Kpi, Ring } from "@/components/ui";
 import { useDrawer } from "@/lib/drawer";
 import CampaignDrawer from "@/components/drawers/CampaignDrawer";
 import ProspectDrawer from "@/components/drawers/ProspectDrawer";
@@ -13,43 +13,47 @@ import InteractionDrawer from "@/components/drawers/InteractionDrawer";
 const TABS = ["BU leader scorecard", "SBU exec roll-up", "Seller personal view", "Campaign & Radar performance", "Campaign health", "Agent adoption"];
 
 export default function Dashboard() {
-  const { scope, setScope, pview, subview, setSub, go } = useApp();
-  const tab = subview["dashboard"] || TABS[0];
-  const setTab = (t: string) => setSub("dashboard", t);
+  const { scope, go } = useApp();
   const k = kpiFor(scope);
 
   return (
     <div className="wrap">
-      <h2 className="page">{scopeLabel(scope)} — Factory performance</h2>
-      <p className="sub">Shared KPI definitions · actuals against quarterly objectives · refreshed daily</p>
-      <Tabs tabs={pview === "Seller" ? [TABS[2]] : TABS} active={tab} onChange={setTab} />
-      {tab === "BU leader scorecard" && <BuScorecard k={k} scope={scope} go={go} />}
-      {tab === "SBU exec roll-up" && <SbuRollup setScope={setScope} />}
-      {tab === "Seller personal view" && <SellerView />}
-      {tab === "Campaign & Radar performance" && <CampaignPerf />}
-      {tab === "Campaign health" && <CampaignHealth />}
-      {tab === "Agent adoption" && <AgentAdoption />}
+      <BuScorecard k={k} scope={scope} go={go} />
     </div>
   );
 }
 
 function BuScorecard({ k, scope, go }: { k: ReturnType<typeof kpiFor>; scope: { bu: string; country: string }; go: (id: string, sub?: string) => void }) {
   const pipelinePct = (k.pipeline / k.pTarget) * 100;
-  const revenuePct = (k.revenue / k.rTarget) * 100;
+  const bookingsPct = (k.revenue / k.rTarget) * 100;
   const coveragePct = (k.coverage / k.cTarget) * 100;
-  const byCountry = [
-    { name: "Germany", value: k.pipeline * 1.35 },
-    { name: "Netherlands", value: k.pipeline * 0.7 },
-    { name: "United Kingdom", value: k.pipeline * 1.1 },
-    { name: "Nordics", value: k.pipeline * 0.85 },
-  ];
+  const agentSummary = AGENTS.reduce((summary, agent) => {
+    if (!summary.names.has(agent.n)) {
+      summary.names.add(agent.n);
+      summary.launches += agent.launches ?? 0;
+    }
+    return summary;
+  }, { names: new Set<string>(), launches: 0 });
+  const countryNames: Record<string, string> = { NL: "Netherlands", DE: "Germany", UK: "United Kingdom", SE: "Sweden", FI: "Finland", NO: "Norway", DK: "Denmark" };
+  const countryCodes = scope.bu === "all"
+    ? Object.keys(countryNames)
+    : scope.bu === "NO" && scope.country === "all"
+      ? ["SE", "FI", "NO", "DK"]
+      : [scope.country === "all" ? scope.bu : Object.entries(countryNames).find(([, name]) => name === scope.country)?.[0] ?? scope.bu];
+  const countryKpi = (code: string) => code === "NL" || code === "DE" || code === "UK"
+    ? KPI[code]
+    : KPI_COUNTRY[countryNames[code]];
+  const byCountry = countryCodes.map((code) => ({ name: countryNames[code], value: countryKpi(code).revenue }));
+  const scopedCampaigns = CAMPAIGNS.filter((campaign) => countryCodes.includes(campaign.country ? Object.entries(countryNames).find(([, name]) => name === campaign.country)?.[0] ?? campaign.bu : campaign.bu));
+  const scopedPartners = PARTNER_PLAYS.filter((play) => play.countries.some((country) => countryCodes.includes(country)) && play.status === "Active");
+  const scopedSignals = SIGNALS.filter((signal) => countryCodes.includes(signal.country ? Object.entries(countryNames).find(([, name]) => name === signal.country)?.[0] ?? signal.bu : signal.bu));
   const maxCountry = Math.max(...byCountry.map((x) => x.value));
 
   return (
     <>
       <div className="flex between wrapf mb" style={{ alignItems: "flex-end" }}>
         <div>
-          <h2 className="page" style={{ marginBottom: 2 }}>Mid-Market Factory snapshot</h2>
+          <h2 className="page" style={{ marginBottom: 2 }}>{scopeLabel(scope)} — Mid-Market Factory snapshot</h2>
           <p className="sub" style={{ margin: 0 }}>Leadership view · actuals vs quarterly targets · every tile drills into its module</p>
         </div>
         <div className="legend">Figures illustrative · As of 15 Sep 2026</div>
@@ -63,9 +67,9 @@ function BuScorecard({ k, scope, go }: { k: ReturnType<typeof kpiFor>; scope: { 
             <div><div className="big">~{k.clients ?? Math.round((k.pipeline + k.revenue) * 4)}</div><div className="lab">Total mid-market clients</div></div>
             <div><div className="big">{k.targetAccounts ?? k.oppsCreated}</div><div className="lab">Target accounts</div></div>
             <div><div className="big">{k.activeAccounts ?? k.meetings}</div><div className="lab">Targeted / active accounts</div></div>
-            <div><div className="big">{k.outreach}</div><div className="lab">Client meetings generated</div></div>
+            <div><div className="big">{k.meetings}</div><div className="lab">Client meetings generated</div></div>
           </div>
-          <div className="att"><span className="badge b-blue">Coverage {Math.round(k.coverage)}%</span> vs target {Math.round(k.cTarget)}% · {k.oppsCreated} qualified leads this quarter</div>
+          <div className="att"><span className="badge b-blue">Coverage {Math.round(k.coverage)}%</span> vs target {Math.round(k.cTarget)}% · {k.qualifiedLeads} qualified leads this quarter</div>
         </div>
 
         <div className="tile" style={{ gridColumn: "span 5" }} onClick={() => go("pipeline", "Master list")}>
@@ -73,29 +77,29 @@ function BuScorecard({ k, scope, go }: { k: ReturnType<typeof kpiFor>; scope: { 
           <div className="th"><div className="ti" style={{ background: "var(--navy2)" }}>🧭</div><div className="tt">Pipeline & Opportunity Explorer</div></div>
           <div className="flex between">
             <div>
-              <div className="big">€{k.pipeline.toFixed(1)}M</div>
+              <div className="big">€{k.revenue.toFixed(1)}M</div>
               <div className="lab">Bookings influenced</div>
               <div className="mt6"><span className="muted" style={{ fontSize: 12 }}>Qualified pipeline <b>€{k.pipeline.toFixed(1)}M</b></span></div>
             </div>
-            <Ring pct={pipelinePct} color={pctColor(pipelinePct)} />
+            <Ring pct={bookingsPct} color={pctColor(bookingsPct)} />
           </div>
-          <div className="att">Target €{k.pTarget.toFixed(1)}M bookings · €{k.pTarget.toFixed(1)}M pipeline</div>
+          <div className="att">Target €{k.rTarget.toFixed(1)}M bookings · €{k.pTarget.toFixed(1)}M pipeline</div>
         </div>
 
         <div className="tile" style={{ gridColumn: "span 4" }} onClick={() => go("campaigns", "Calendar")}>
           <div className="drill">Open →</div>
           <div className="th"><div className="ti" style={{ background: "var(--teal)" }}>📣</div><div className="tt">Campaigns</div></div>
-          <div className="big">{k.campaigns ?? CAMPAIGNS.filter((c) => c.status === "Active").length}</div>
+          <div className="big">{k.campaigns}</div>
           <div className="lab"># Active campaigns</div>
-          <div className="att">{CAMPAIGNS.length} total in scope · campaign calendar & builder available</div>
+          <div className="att">{scopedCampaigns.length} total in scope · campaign calendar & builder available</div>
         </div>
 
         <div className="tile" style={{ gridColumn: "span 4" }} onClick={() => go("solutions", "Partner Plays")}>
           <div className="drill">Open →</div>
           <div className="th"><div className="ti" style={{ background: "var(--amber)" }}>🤝</div><div className="tt">Partner Plays</div></div>
-          <div className="big">{k.partners ?? Math.max(2, CAMPAIGNS.filter((c) => c.signalDriven).length)}</div>
+          <div className="big">{scopedPartners.length}</div>
           <div className="lab"># Active partner plays</div>
-          <div className="att">€{(k.pipeline * 0.32).toFixed(1)}M partner-influenced pipeline</div>
+          <div className="att">€{scopedPartners.reduce((sum, play) => sum + play.pipe, 0).toFixed(1)}M partner-influenced pipeline</div>
         </div>
 
         <div className="tile" style={{ gridColumn: "span 4" }} onClick={() => go("solutions", "Assets by Business Line")}>
@@ -112,8 +116,8 @@ function BuScorecard({ k, scope, go }: { k: ReturnType<typeof kpiFor>; scope: { 
           <div className="flex between">
             <div><div className="big">{k.signals}</div><div className="lab"># Market triggers covered this quarter</div></div>
             <div style={{ textAlign: "right" }}>
-              <div><span className="badge b-red">{Math.max(1, Math.round(k.signals * 0.28))} critical</span></div>
-              <div className="mt6"><span className="badge b-amber">{Math.max(2, Math.round(k.signals * 0.52))} high</span></div>
+              <div><span className="badge b-red">{scopedSignals.filter((signal) => signal.rel === "Critical").length} critical</span></div>
+              <div className="mt6"><span className="badge b-amber">{scopedSignals.filter((signal) => signal.rel === "High").length} high</span></div>
             </div>
           </div>
           <div className="att">7 vertical trigger categories · {k.signals} open signals awaiting action</div>
@@ -123,9 +127,9 @@ function BuScorecard({ k, scope, go }: { k: ReturnType<typeof kpiFor>; scope: { 
           <div className="drill">Open launchpad →</div>
           <div className="th"><div className="ti" style={{ background: "var(--pink)" }}>🤖</div><div className="tt">Smart Agents</div></div>
           <div className="flex between">
-            <div><div className="big">{k.agents ?? Math.max(6, AGENT_USAGE.length)}</div><div className="lab"># agents on the launchpad</div></div>
+            <div><div className="big">{agentSummary.names.size}</div><div className="lab"># agents on the launchpad</div></div>
             <div style={{ textAlign: "right" }}>
-              <div className="big" style={{ fontSize: 22 }}>{AGENT_USAGE.reduce((sum, item) => sum + item.inv, 0)}</div>
+              <div className="big" style={{ fontSize: 22 }}>{agentSummary.launches}</div>
               <div className="lab">launches this quarter</div>
             </div>
           </div>
@@ -150,7 +154,7 @@ function BuScorecard({ k, scope, go }: { k: ReturnType<typeof kpiFor>; scope: { 
         <div className="card" style={{ flex: 1, minWidth: 290 }}>
           <h3>Attainment vs quarterly target</h3>
           {([
-            ["Bookings influenced", pipelinePct],
+            ["Bookings influenced", bookingsPct],
             ["Qualified pipeline", pipelinePct],
             ["Coverage", coveragePct],
           ] as [string, number][]).map(([label, value]) => (

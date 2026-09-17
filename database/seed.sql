@@ -345,16 +345,15 @@ INSERT INTO kpi_definitions (name, unit, definition, dimensions) VALUES
     ('Agent adoption', '#', 'Distinct users invoking an agent in the period', ARRAY['BU','Country','Agent']);
 
 INSERT INTO kpi_snapshots
-    (as_of, business_unit_code, country_name, pipeline_millions, revenue_millions, coverage_percent, reuse_percent, signal_count, signal_conversion_percent, outreach_count, meeting_count, opportunities_created, stage_conversion_percent, pipeline_target_millions, revenue_target_millions, coverage_target_percent)
+    (as_of, business_unit_code, country_name, pipeline_millions, revenue_millions, coverage_percent, reuse_percent, signal_count, signal_conversion_percent, outreach_count, meeting_count, opportunities_created, stage_conversion_percent, pipeline_target_millions, revenue_target_millions, coverage_target_percent, client_count, target_account_count, active_account_count, active_campaign_count, active_partner_play_count, key_asset_count, smart_agent_count, qualified_lead_count, bookings_target_millions)
 VALUES
-    ('2026-09-02 02:00:00+02', 'UK', NULL, 19.2, 6.1, 55, 64, 29, 15, 186, 41, 9, 22, 26, 9, 65),
-    ('2026-09-02 02:00:00+02', 'DE', NULL, 24.6, 8.4, 62, 71, 38, 18, 242, 57, 13, 26, 30, 11, 70),
-    ('2026-09-02 02:00:00+02', 'NL', NULL, 12.8, 4.7, 58, 69, 22, 16, 154, 34, 8, 24, 16, 6, 66),
-    ('2026-09-02 02:00:00+02', 'NO', NULL, 14.1, 5.2, 49, 60, 26, 14, 131, 29, 7, 20, 20, 7, 62),
-    ('2026-09-02 02:00:00+02', 'NO', 'Sweden', 5.4, 2.0, 53, 62, 9, 15, 44, 10, 3, 22, 7, 2.6, 64),
-    ('2026-09-02 02:00:00+02', 'NO', 'Finland', 3.9, 1.4, 51, 59, 7, 14, 36, 8, 2, 21, 5.5, 1.9, 62),
-    ('2026-09-02 02:00:00+02', 'NO', 'Norway', 2.7, 1.1, 45, 58, 6, 13, 29, 7, 1, 18, 4, 1.4, 60),
-    ('2026-09-02 02:00:00+02', 'NO', 'Denmark', 2.1, 0.7, 44, 57, 4, 12, 22, 4, 1, 17, 3.5, 1.1, 60);
+    ('2026-08-11 02:00:00+02', 'NL', NULL, 38.4, 45.0, 62, 71, 92, 7, 31, 12, 12, 31, 50, 60, 70, 150, 50, 31, 4, 12, 55, 29, 7, 60),
+    ('2026-08-11 02:00:00+02', 'DE', NULL, 47.1, 52.6, 64, 68, 118, 11, 41, 18, 18, 36, 60, 70, 70, 210, 64, 41, 5, 9, 62, 29, 11, 70),
+    ('2026-08-11 02:00:00+02', 'UK', NULL, 33.7, 38.2, 53, 64, 87, 8, 29, 14, 14, 34, 45, 55, 65, 180, 55, 29, 4, 8, 48, 29, 8, 55),
+    ('2026-08-11 02:00:00+02', 'NO', 'Sweden', 16.2, 19.4, 53, 60, 51, 5, 17, 8, 6, 31, 22, 26, 62, 95, 32, 17, 3, 6, 34, 29, 5, 26),
+    ('2026-08-11 02:00:00+02', 'NO', 'Finland', 12.8, 14.1, 54, 58, 44, 4, 14, 7, 5, 29, 17, 18, 60, 70, 26, 14, 2, 5, 28, 29, 4, 18),
+    ('2026-08-11 02:00:00+02', 'NO', 'Norway', 9.6, 11.3, 45, 55, 36, 3, 10, 5, 4, 28, 14, 15, 60, 62, 22, 10, 2, 4, 24, 29, 3, 15),
+    ('2026-08-11 02:00:00+02', 'NO', 'Denmark', 8.4, 9.8, 45, 56, 31, 3, 9, 4, 3, 27, 12, 13, 60, 58, 20, 9, 2, 4, 22, 29, 3, 13);
 
 INSERT INTO audit_events (occurred_at, actor_name, action, event_details) VALUES
     ('2026-09-02 09:14:00+02', 'R. Patel', 'Upload validated', 'BATCH-0007 · 38 accepted, 6 rejected'),
@@ -363,5 +362,52 @@ INSERT INTO audit_events (occurred_at, actor_name, action, event_details) VALUES
     ('2026-08-31 17:55:00+02', 'T. Schmidt', 'Campaign edited', 'DE Industrial — Cost Takeout Q3 · 4 accounts added'),
     ('2026-08-29 14:20:00+02', 'Factory S&A Lead', 'Asset published', 'S/4 migration blueprint v5'),
     ('2026-08-28 08:31:00+02', 'Admin', 'Connector deactivated', 'Job boards / hiring feed - pending procurement review');
+
+INSERT INTO partner_plays
+    (name, partner_name, partner_tier, business_line, theme, eligible_country_codes, status, value_proposition, influenced_pipeline_millions, linked_campaign_count, owner_name)
+VALUES
+    ('SAP RISE for Mid-Market', 'SAP', 'Platinum', 'ADM', 'SAP / Cloud', ARRAY['NL','DE','UK','SE','FI'], 'Active', 'Fixed-scope RISE migration with Capgemini mid-market accelerators and SAP funding support.', 9.4, 3, 'S. de Vries'),
+    ('AWS Landing Zone Fast Start', 'AWS', 'Premier', 'CIS', 'SAP / Cloud', ARRAY['DE','UK','NO','DK'], 'Active', 'Six-week landing zone with AWS MAP funding; ideal entry play for new logos.', 6.7, 3, 'K. Weber'),
+    ('Microsoft Data & AI Jumpstart', 'Microsoft', 'Premier', 'I&D', 'Data & AI', ARRAY['NL','DE','UK','SE','FI','NO','DK'], 'Active', 'Fabric-based data platform starter with joint Microsoft investment and a four-week proof of value.', 8.1, 4, 'L. Murray'),
+    ('Adobe Commerce for Mid-Market Retail', 'Adobe', 'Gold', 'DCX', 'Sector play', ARRAY['NL','DE','SE'], 'Active', 'Pre-configured commerce stack for retailers under EUR 3B revenue, with Adobe co-marketing.', 4.2, 3, 'J. Bakker'),
+    ('Siemens Smart Factory Accelerator', 'Siemens', 'Gold', 'CIS', 'Sector play', ARRAY['DE','SE'], 'Active', 'OT/IT convergence play for discrete manufacturers, co-delivered with Siemens.', 5.3, 2, 'A. Lindqvist'),
+    ('ServiceNow ITSM Consolidation', 'ServiceNow', 'Gold', 'ADM', 'Vendor Consolidation', ARRAY['NL','UK'], 'Active', 'Consolidate fragmented tooling onto a single ITSM platform with a strong cost-takeout narrative.', 3.1, 2, 'M. Jansen'),
+    ('Google Cloud Modernization Sprint', 'Google Cloud', 'Silver', 'CIS', 'Enterprise Technology Modernization', ARRAY['UK','DK'], 'Draft', 'Application modernization sprint with Google funding, pending the mid-market pricing model.', 0, 0, 'R. Patel');
+
+DELETE FROM agent_usage_metrics;
+DELETE FROM smart_agents;
+INSERT INTO smart_agents (name, lifecycle_stage, agent_type, status, version, description, grounding_sources, owner_team, best_used_for, launches_this_quarter)
+SELECT name, stage, 'Internal', 'Published', 'v1.0', description, ARRAY['Radar signals','Public web'], owner, use_case, launches
+FROM (VALUES
+    ('Intelio','Client intelligence','Clients & Innovation','Account intelligence and opportunity hypotheses.','Account planning and meeting preparation.',64),
+    ('BritMap','Client intelligence','Clients & Innovation','UK BuyerMaps and decision-maker context.','UK targeted sales engagement.',22),
+    ('Helder','Client intelligence','Clients & Innovation','Netherlands mid-market BuyerMaps.','Preparing Netherlands account meetings.',18),
+    ('Rapport','Client intelligence','Clients & Innovation','Stakeholder intelligence and tailored talking points.','Senior stakeholder conversations.',37),
+    ('Stakeholder Profile','Client intelligence','Clients & Innovation','Structured stakeholder profiles.','Account or bid stakeholder mapping.',15),
+    ('LinkedIn CXO Voice','Client intelligence','Clients & Innovation','Public executive voice analysis.','Executive-change signals.',26),
+    ('Market Intel in a Box','Client intelligence','Clients & Innovation','Executive market intelligence and client briefings.','Leadership-ready briefings.',29),
+    ('Knowledge SPOC','Meeting preparation','Knowledge Management','Relevant collateral and internal guidance.','Meeting materials and proof points.',51),
+    ('Beacon','Opportunity qualification','Clients & Innovation','Structured buying-signal scoring.','Validating commercial signals.',33),
+    ('Triggers Orchestrator','Opportunity qualification','Clients & Innovation','Trigger-batch classification and governance.','Standardising signal batches.',12),
+    ('Financial Analyst','Opportunity qualification','Clients & Innovation','Financial stress analysis and opportunity mapping.','Margin pressure or restructuring.',44),
+    ('Spend Scout','Opportunity qualification','Clients & Innovation','Investment hypothesis and spending-area analysis.','Separating opportunity from noise.',20),
+    ('Sales TransFORM','Opportunity qualification','Sales Analytics Centre','Sales pipeline and forecasting guidance.','Qualifying or progressing pipeline.',17),
+    ('Deal Risk Sentinel','Opportunity qualification','Wincentre','Commercial, delivery and governance risk posture.','Go/no-go and deal review.',25),
+    ('Nexus','Origination & shaping','Clients & Innovation','Innovation-led client value stories.','Solution shaping.',39),
+    ('Researcher','Origination & shaping','Clients & Innovation','Deep market, client and competitor research.','Market and competitor research.',47),
+    ('Horizon','Origination & shaping','Clients & Innovation','Early public-sector tender intelligence.','Pre-tender positioning.',14),
+    ('CompeteIQ','Origination & shaping','Clients & Innovation','Competitor overview and compete strategy.','Win-theme development.',21),
+    ('GCC Advisor','Origination & shaping','Clients & Innovation','GCC market and operating-model intelligence.','GCC-related opportunities.',8),
+    ('Beat The Competition','Origination & shaping','Clients & Innovation','Competitive intelligence newsletters.','Competitive monitoring.',16),
+    ('RFx Shredder','RFP / bid support','Wincentre','RFP and RFI requirement extraction.','Day one of a bid review.',46),
+    ('Bid Support Copilot','RFP / bid support','Wincentre','Bid lifecycle and compliance support.','Bid response delivery.',34),
+    ('Winplan Navigator','RFP / bid support','Wincentre','Win strategy and customer insight.','Pursuit strategy.',28),
+    ('RedTeam Review','RFP / bid support','Wincentre','Critical tender and bid-content review.','Formal proposal review.',19),
+    ('Cognitive Review','RFP / bid support','Wincentre','Proposal clarity and decision-effectiveness review.','Executive-ready proposals.',13),
+    ('Proposal Matcher','RFP / bid support','Proposal Centre','RFx-to-proposal match and gap analysis.','Validating proposal fit.',23),
+    ('Final Checker','RFP / bid support','Proposal Centre','Response consistency, grammar and compliance checks.','Before submission.',30),
+    ('Proposal Development','RFP / bid support','Proposal Centre','Structured proposal document generation.','Accelerating drafting.',26),
+    ('FAQ / Response Draft - UK','RFP / bid support','Wincentre','Approved UK standard-response retrieval.','FAQs and questionnaires.',11)
+) AS prototype_agents(name, stage, owner, description, use_case, launches);
 
 COMMIT;

@@ -49,17 +49,20 @@ h2.page{font-size:20px;margin:0 0 4px}
 .kpi .lab{font-size:11.5px;color:var(--mut)}
 .kpi .val{font-size:22px;font-weight:700;margin:4px 0 2px}
 .kpi .meta{font-size:11px;color:var(--mut)}
-.dashgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;padding:4px 0 0}
-.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 15px;min-height:172px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;cursor:pointer}
-.tile:hover{border-color:var(--primary);box-shadow:0 8px 24px rgba(11,31,58,.06)}
-.tile .drill{position:absolute;top:12px;right:12px;font-size:10.5px;color:var(--primary);font-weight:600}
-.tile .th{display:flex;align-items:center;gap:10px;margin-top:10px}
-.tile .ti{width:34px;height:34px;border-radius:9px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
-.tile .tt{font-size:14px;font-weight:700}
-.tile .metricrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
-.tile .big{font-size:26px;font-weight:700;line-height:1.1}
-.tile .lab{font-size:11.5px;color:var(--mut);margin-top:2px}
-.tile .att{font-size:11.5px;color:var(--mut);margin-top:12px;line-height:1.5}
+.dashgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:13px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px;position:relative;cursor:pointer;transition:box-shadow .15s,transform .15s}
+.tile:hover{box-shadow:0 6px 20px rgba(11,31,58,.10);transform:translateY(-1px);border-color:#cfe0ee}
+.tile .drill{position:absolute;top:14px;right:15px;font-size:11px;color:var(--mut);opacity:0;transition:opacity .15s}
+.tile:hover .drill{opacity:1}
+.tile .th{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.tile .ti{width:34px;height:34px;border-radius:9px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px}
+.tile .tt{font-size:14.5px;font-weight:700}
+.tile .metricrow{display:flex;gap:0;align-items:stretch}
+.tile .metricrow>div{flex:1;padding:0 14px;border-left:1px solid var(--line)}
+.tile .metricrow>div:first-child{padding-left:0;border-left:none}
+.tile .big{font-size:30px;font-weight:700;line-height:1.1}
+.tile .lab{font-size:11.5px;color:var(--mut);line-height:1.3}
+.tile .att{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:11px;color:var(--mut)}
 .tile .flex.between{gap:12px}
 .tile.wide{min-height:160px}
 table{width:100%;border-collapse:collapse}
@@ -111,6 +114,7 @@ input.t:disabled,select.t:disabled,textarea:disabled{background:#f1f5f9;color:#8
 label.fl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--mut);margin:11px 0 4px;font-weight:600}
 .f2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 .f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px}
+.pipeline-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.pipeline-filters .pipeline-search{flex:1;min-width:250px;width:auto}.pipeline-filters select.t{width:auto}.pipeline-filter-help{flex-basis:100%;margin-top:2px}
 .flow{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}.flow .fs{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px}.flow .fs b{display:block;font-size:11.5px;color:var(--primary);margin-bottom:4px}.flow .fs .legend{display:block;line-height:1.4}
 .output{background:#f6f9fc;border:1px solid var(--line);border-radius:10px;padding:13px;font-size:12.8px;white-space:pre-wrap;line-height:1.5}
 .legend{font-size:11.2px;color:var(--mut)}

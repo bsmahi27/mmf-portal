@@ -1977,7 +1977,14 @@ components:
         accountsReached: { type: integer }
         outreachCount: { type: integer }
         meetingCount: { type: integer }
+        meetingsBooked: { type: integer }
+        qualifiedLeads: { type: integer }
+        cxoReach: { type: integer }
+        inboundCount: { type: integer }
+        audienceReach: { type: integer }
         pipelineMillions: { type: number, format: double }
+        bookingsMillions: { type: number, format: double }
+        revenueWonMillions: { type: number, format: double }
         opportunitiesGenerated: { type: integer }
         winsMillions: { type: number, format: double }
 
@@ -1995,6 +2002,10 @@ components:
         startDate: { type: string, format: date }
         endDate: { type: string, format: date }
         targetAccountCount: { type: integer }
+        businessLine: { type: string, nullable: true }
+        theme: { type: string, nullable: true }
+        partnerName: { type: string, nullable: true }
+        campaignDescription: { type: string, nullable: true }
         metrics: { $ref: "#/components/schemas/CampaignMetrics" }
         signalDriven: { type: boolean }
     CampaignInput:
@@ -2091,7 +2102,7 @@ components:
 
     Severity:
       type: string
-      enum: [Low, Medium, High]
+      enum: [Low, Medium, High, Critical]
     SignalStatus:
       type: string
       enum: [New, Reviewed, Dismissed]
@@ -2110,6 +2121,16 @@ components:
         severity: { $ref: "#/components/schemas/Severity" }
         status: { $ref: "#/components/schemas/SignalStatus" }
         summary: { type: string }
+        signalCategory: { type: string, nullable: true }
+        publishedAt: { type: string, format: date, nullable: true }
+        opportunityHypothesis: { type: string, nullable: true }
+        recommendedAgents:
+          type: array
+          items: { type: string }
+        recommendedAction: { type: string, nullable: true }
+        scoringInputs:
+          type: object
+          additionalProperties: { type: integer }
     RadarSignalPage:
       allOf:
         - $ref: "#/components/schemas/PageEnvelope"
@@ -2138,6 +2159,9 @@ components:
         groundingSources:
           type: array
           items: { type: string }
+        ownerTeam: { type: string, nullable: true }
+        bestUsedFor: { type: string, nullable: true }
+        launchesThisQuarter: { type: integer }
     AgentInput:
       allOf:
         - $ref: "#/components/schemas/Agent"
@@ -2289,6 +2313,32 @@ components:
         pipelineTargetMillions: { type: number, format: double }
         revenueTargetMillions: { type: number, format: double }
         coverageTargetPercent: { type: number, format: double }
+        clientCount: { type: integer }
+        targetAccountCount: { type: integer }
+        activeAccountCount: { type: integer }
+        activeCampaignCount: { type: integer }
+        activePartnerPlayCount: { type: integer }
+        keyAssetCount: { type: integer }
+        smartAgentCount: { type: integer }
+        qualifiedLeadCount: { type: integer }
+        bookingsTargetMillions: { type: number, format: double }
+
+    PartnerPlay:
+      type: object
+      properties:
+        name: { type: string }
+        partnerName: { type: string }
+        partnerTier: { type: string }
+        businessLine: { type: string }
+        theme: { type: string }
+        eligibleCountryCodes:
+          type: array
+          items: { type: string, enum: [NL, DE, UK, SE, FI, NO, DK] }
+        status: { type: string, enum: [Draft, Active, Paused, Closed] }
+        valueProposition: { type: string }
+        influencedPipelineMillions: { type: number, format: double }
+        linkedCampaignCount: { type: integer }
+        ownerName: { type: string }
     KpiSnapshotPage:
       allOf:
         - $ref: "#/components/schemas/PageEnvelope"

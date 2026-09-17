@@ -152,6 +152,17 @@ CREATE TABLE campaigns (
     opportunities_generated integer NOT NULL CHECK (opportunities_generated >= 0),
     wins_millions numeric(12,2) NOT NULL CHECK (wins_millions >= 0),
     signal_driven boolean NOT NULL,
+    business_line text,
+    theme text,
+    partner_name text,
+    campaign_description text,
+    meetings_booked integer NOT NULL DEFAULT 0 CHECK (meetings_booked >= 0),
+    qualified_leads integer NOT NULL DEFAULT 0 CHECK (qualified_leads >= 0),
+    cxo_reach integer NOT NULL DEFAULT 0 CHECK (cxo_reach >= 0),
+    inbound_count integer NOT NULL DEFAULT 0 CHECK (inbound_count >= 0),
+    audience_reach integer NOT NULL DEFAULT 0 CHECK (audience_reach >= 0),
+    bookings_millions numeric(12,2) NOT NULL DEFAULT 0 CHECK (bookings_millions >= 0),
+    revenue_won_millions numeric(12,2) NOT NULL DEFAULT 0 CHECK (revenue_won_millions >= 0),
     CHECK (end_date >= start_date),
     CHECK (accounts_reached <= target_account_count)
 );
@@ -211,9 +222,15 @@ CREATE TABLE radar_signals (
     title text NOT NULL,
     source text NOT NULL,
     score smallint NOT NULL CHECK (score BETWEEN 0 AND 100),
-    severity text NOT NULL CHECK (severity IN ('Low', 'Medium', 'High')),
+    severity text NOT NULL CHECK (severity IN ('Low', 'Medium', 'High', 'Critical')),
     status text NOT NULL CHECK (status IN ('New', 'Reviewed', 'Dismissed')),
     summary text NOT NULL,
+    signal_category text,
+    published_at date,
+    opportunity_hypothesis text,
+    recommended_agents text[] NOT NULL DEFAULT '{}',
+    recommended_action text,
+    scoring_inputs jsonb NOT NULL DEFAULT '{}',
     UNIQUE (account_name, title)
 );
 
@@ -233,7 +250,24 @@ CREATE TABLE smart_agents (
     status text NOT NULL CHECK (status IN ('Published', 'In-Test', 'Draft', 'Retired')),
     version text NOT NULL,
     description text NOT NULL,
-    grounding_sources text[] NOT NULL DEFAULT '{}'
+    grounding_sources text[] NOT NULL DEFAULT '{}',
+    owner_team text,
+    best_used_for text,
+    launches_this_quarter integer NOT NULL DEFAULT 0 CHECK (launches_this_quarter >= 0)
+);
+
+CREATE TABLE partner_plays (
+    name text PRIMARY KEY,
+    partner_name text NOT NULL,
+    partner_tier text NOT NULL,
+    business_line text NOT NULL,
+    theme text NOT NULL,
+    eligible_country_codes text[] NOT NULL,
+    status text NOT NULL CHECK (status IN ('Draft', 'Active', 'Paused', 'Closed')),
+    value_proposition text NOT NULL,
+    influenced_pipeline_millions numeric(12,2) NOT NULL DEFAULT 0 CHECK (influenced_pipeline_millions >= 0),
+    linked_campaign_count integer NOT NULL DEFAULT 0 CHECK (linked_campaign_count >= 0),
+    owner_name text NOT NULL
 );
 
 CREATE TABLE agent_usage_metrics (
@@ -335,6 +369,15 @@ CREATE TABLE kpi_snapshots (
     pipeline_target_millions numeric(12,2) NOT NULL,
     revenue_target_millions numeric(12,2) NOT NULL,
     coverage_target_percent numeric(5,2) NOT NULL CHECK (coverage_target_percent BETWEEN 0 AND 100),
+    client_count integer,
+    target_account_count integer,
+    active_account_count integer,
+    active_campaign_count integer,
+    active_partner_play_count integer,
+    key_asset_count integer,
+    smart_agent_count integer,
+    qualified_lead_count integer,
+    bookings_target_millions numeric(12,2),
     UNIQUE (as_of, business_unit_code, country_name)
 );
 
