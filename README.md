@@ -2,6 +2,17 @@
 
 A Next.js application for the MMF portal interface.
 
+## Backend contracts
+
+The backend is designed as a Spring Boot 4 domain-driven modular monolith with two inbound API adapters:
+
+- [REST/OpenAPI](openapi/mmf-portal-api.yaml) for integrations, uploads, asynchronous commands and administration
+- [GraphQL SDL](graphql/schema.graphqls) for portal queries and composed UI mutations
+- [Domain architecture](docs/domain-architecture.md) for bounded contexts, invariants and package layout
+- [PostgreSQL schema](database/schema.sql) with Flyway migrations under `src/main/resources/db/migration`
+
+Both API adapters must call the same application use cases; domain rules must not be implemented in controllers or resolvers.
+
 ## Prerequisites
 
 Before you begin, make sure you have:

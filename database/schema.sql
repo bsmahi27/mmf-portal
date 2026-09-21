@@ -114,6 +114,15 @@ CREATE TABLE assets (
     certification_status text NOT NULL CHECK (certification_status IN ('Draft', 'Submitted', 'Certified & Published')),
     solution_name text NOT NULL REFERENCES solutions(name),
     carve_out_ready boolean NOT NULL DEFAULT false,
+    source_type text NOT NULL DEFAULT 'Repository link' CHECK (source_type IN ('Uploaded file', 'Repository link', 'External link')),
+    repository_name text,
+    source_url text,
+    owner_name text NOT NULL DEFAULT 'Unassigned',
+    refresh_cycle_months integer NOT NULL DEFAULT 12 CHECK (refresh_cycle_months > 0),
+    last_reviewed_at date,
+    next_review_at date,
+    lifecycle_state text NOT NULL DEFAULT 'Draft' CHECK (lifecycle_state IN ('Draft', 'Submitted', 'Certified', 'In refresh', 'Re-certified', 'Retired')),
+    visibility_scopes text[] NOT NULL DEFAULT '{}',
     UNIQUE (name, version)
 );
 
@@ -130,7 +139,14 @@ CREATE TABLE radar_engines (
     client_count integer NOT NULL CHECK (client_count >= 0),
     rule_count integer NOT NULL CHECK (rule_count >= 0),
     schedule text NOT NULL,
-    signal_count integer NOT NULL CHECK (signal_count >= 0)
+    signal_count integer NOT NULL CHECK (signal_count >= 0),
+    prospect_set text NOT NULL DEFAULT 'Target prospects' CHECK (prospect_set IN ('Target prospects', 'Active campaign accounts', 'Qualified leads', 'Full mid-market master', 'Custom upload')),
+    source_keys text[] NOT NULL DEFAULT '{}',
+    frequency text NOT NULL DEFAULT 'Daily',
+    run_at text NOT NULL DEFAULT '05:00 CET',
+    lookback_days integer NOT NULL DEFAULT 14 CHECK (lookback_days > 0),
+    minimum_score smallint NOT NULL DEFAULT 70 CHECK (minimum_score BETWEEN 0 AND 100),
+    auto_link_campaigns boolean NOT NULL DEFAULT true
 );
 
 CREATE TABLE campaigns (
@@ -234,6 +250,15 @@ CREATE TABLE radar_signals (
     UNIQUE (account_name, title)
 );
 
+CREATE TABLE radar_runs (
+    id uuid PRIMARY KEY,
+    engine_name text NOT NULL REFERENCES radar_engines(name) ON DELETE CASCADE,
+    status text NOT NULL CHECK (status IN ('Accepted', 'Running', 'Completed', 'Failed')),
+    requested_at timestamptz NOT NULL,
+    completed_at timestamptz,
+    failure_message text
+);
+
 CREATE TABLE data_source_connectors (
     name text PRIMARY KEY,
     connector_type text NOT NULL,
@@ -253,7 +278,11 @@ CREATE TABLE smart_agents (
     grounding_sources text[] NOT NULL DEFAULT '{}',
     owner_team text,
     best_used_for text,
-    launches_this_quarter integer NOT NULL DEFAULT 0 CHECK (launches_this_quarter >= 0)
+    launches_this_quarter integer NOT NULL DEFAULT 0 CHECK (launches_this_quarter >= 0),
+    platform text,
+    launch_url text,
+    visibility_scopes text[] NOT NULL DEFAULT '{}',
+    recommended_trigger_categories text[] NOT NULL DEFAULT '{}'
 );
 
 CREATE TABLE partner_plays (
@@ -268,6 +297,26 @@ CREATE TABLE partner_plays (
     influenced_pipeline_millions numeric(12,2) NOT NULL DEFAULT 0 CHECK (influenced_pipeline_millions >= 0),
     linked_campaign_count integer NOT NULL DEFAULT 0 CHECK (linked_campaign_count >= 0),
     owner_name text NOT NULL
+);
+
+CREATE TABLE campaign_partner_plays (
+    campaign_name text NOT NULL REFERENCES campaigns(name) ON DELETE CASCADE,
+    partner_play_name text NOT NULL REFERENCES partner_plays(name),
+    linked_at timestamptz NOT NULL DEFAULT now(),
+    linked_by text NOT NULL,
+    PRIMARY KEY (campaign_name, partner_play_name)
+);
+
+CREATE TABLE agent_launches (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    agent_name text NOT NULL REFERENCES smart_agents(name),
+    launched_at timestamptz NOT NULL,
+    launched_by text NOT NULL,
+    account_name text,
+    prospect_id text REFERENCES prospects(id),
+    opportunity_id text REFERENCES opportunities(id),
+    signal_id bigint REFERENCES radar_signals(id),
+    campaign_name text REFERENCES campaigns(name)
 );
 
 CREATE TABLE agent_usage_metrics (

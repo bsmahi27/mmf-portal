@@ -1,0 +1,506 @@
+"""MMF Portal UI API. Resolvers call the same application use cases as REST adapters."""
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+scalar Date
+scalar DateTime
+scalar Decimal
+scalar JSON
+
+interface Node {
+  id: ID!
+}
+
+type Query {
+  me: CurrentUser!
+  scope: ScopeOptions!
+  dashboard(scope: ScopeInput!): KpiSnapshot!
+
+  prospect(id: ID!): Prospect
+  prospects(filter: ProspectFilter, page: PageInput = { number: 0, size: 20 }): ProspectConnection!
+  opportunity(id: ID!): Opportunity
+  opportunities(filter: OpportunityFilter, page: PageInput = { number: 0, size: 20 }): OpportunityConnection!
+
+  solution(name: String!): Solution
+  solutions(filter: SolutionFilter, page: PageInput = { number: 0, size: 20 }): SolutionConnection!
+  asset(id: ID!): Asset
+  assetMaintenance(filter: AssetMaintenanceFilter, page: PageInput = { number: 0, size: 20 }): AssetConnection!
+
+  campaign(name: String!): Campaign
+  campaigns(filter: CampaignFilter, page: PageInput = { number: 0, size: 20 }): CampaignConnection!
+  partnerPlay(name: String!): PartnerPlay
+  partnerPlays(countryCode: String, status: PartnerPlayStatus): [PartnerPlay!]!
+
+  radarEngine(name: String!): RadarEngine
+  radarEngines(businessUnitCode: String): [RadarEngine!]!
+  radarSignal(id: ID!): RadarSignal
+  radarSignals(filter: RadarSignalFilter, page: PageInput = { number: 0, size: 20 }): RadarSignalConnection!
+
+  agent(name: String!): Agent
+  agents(filter: AgentFilter): [Agent!]!
+}
+
+type Mutation {
+  createProspect(input: ProspectCreateInput!): Prospect!
+  updateProspect(id: ID!, input: ProspectUpdateInput!): Prospect!
+  logProspectInteraction(prospectId: ID!, input: InteractionInput!): Interaction!
+  convertProspect(id: ID!, input: ProspectConversionInput!): Opportunity!
+
+  createCampaign(input: CampaignCreateInput!): Campaign!
+  updateCampaign(name: String!, input: CampaignUpdateInput!): Campaign!
+  transitionCampaign(name: String!, input: CampaignStatusCommand!): Campaign!
+  linkPartnerPlay(campaignName: String!, partnerPlayName: String!): Campaign!
+  unlinkPartnerPlay(campaignName: String!, partnerPlayName: String!): Campaign!
+  createPartnerPlay(input: PartnerPlayInput!): PartnerPlay!
+
+  registerAssetLink(solutionName: String!, input: AssetLinkInput!): Asset!
+  updateAsset(id: ID!, input: AssetUpdateInput!): Asset!
+  transitionAsset(id: ID!, input: AssetLifecycleCommand!): Asset!
+
+  createRadarEngine(input: RadarEngineInput!): RadarEngine!
+  updateRadarEngine(name: String!, input: RadarEngineInput!): RadarEngine!
+  runRadarEngine(name: String!): RadarRun!
+  updateRadarSignalStatus(id: ID!, status: SignalStatus!): RadarSignal!
+
+  registerAgent(input: AgentInput!): Agent!
+  updateAgent(name: String!, input: AgentInput!): Agent!
+  launchAgent(name: String!, context: AgentLaunchInput): AgentLaunch!
+}
+
+input ScopeInput {
+  businessUnitCode: String
+  countryName: String
+}
+
+input PageInput {
+  number: Int! = 0
+  size: Int! = 20
+}
+
+type PageInfo {
+  number: Int!
+  size: Int!
+  totalElements: Int!
+  totalPages: Int!
+}
+
+type CurrentUser {
+  username: String!
+  displayName: String!
+  roleName: String!
+  portalView: String!
+  businessUnitCode: String!
+  countryName: String
+}
+
+type ScopeOptions {
+  businessUnits: [BusinessUnit!]!
+}
+
+type BusinessUnit {
+  code: String!
+  name: String!
+  countries: [Country!]!
+}
+
+type Country {
+  name: String!
+  businessUnitCode: String!
+}
+
+enum LifecycleStage {
+  TARGET_IDENTIFIED
+  RESEARCH
+  OUTREACH
+  MEETINGS_SCHEDULED_OR_DELIVERED
+  QUALIFIED_LEAD
+  CONVERTED_TO_OPPORTUNITY
+}
+
+enum ProspectSource {
+  SINGLE_FORM
+  EXCEL_UPLOAD
+  RADAR_SIGNAL
+  CAMPAIGN
+}
+
+type Prospect implements Node {
+  id: ID!
+  accountName: String!
+  businessUnitCode: String!
+  countryName: String
+  industry: String!
+  estimatedTcvMillions: Decimal!
+  lifecycleStage: LifecycleStage!
+  ownerName: String!
+  expectedSigningQuarter: String!
+  source: ProspectSource!
+  qualificationStatus: String
+  interactions: [Interaction!]!
+  opportunity: Opportunity
+}
+
+input ProspectFilter {
+  businessUnitCode: String
+  countryName: String
+  lifecycleStage: LifecycleStage
+  ownerName: String
+  query: String
+  signingYear: Int
+  signingQuarter: Int
+}
+
+input ProspectCreateInput {
+  accountName: String!
+  businessUnitCode: String!
+  countryName: String
+  industry: String!
+  estimatedTcvMillions: Decimal!
+  lifecycleStage: LifecycleStage!
+  ownerName: String!
+  expectedSigningQuarter: String!
+  source: ProspectSource!
+  uploadBatchId: ID
+  qualificationStatus: String
+}
+
+"""Identity, account, scope and source are intentionally absent and immutable."""
+input ProspectUpdateInput {
+  industry: String!
+  estimatedTcvMillions: Decimal!
+  lifecycleStage: LifecycleStage!
+  ownerName: String!
+  expectedSigningQuarter: String!
+  qualificationStatus: String
+}
+
+type ProspectConnection {
+  nodes: [Prospect!]!
+  pageInfo: PageInfo!
+}
+
+type Interaction implements Node {
+  id: ID!
+  prospectId: ID!
+  interactionType: String!
+  interactionDate: Date!
+  sellerName: String!
+  notes: String!
+  nextAction: String!
+  status: String!
+  dueDate: Date!
+}
+
+input InteractionInput {
+  interactionType: String!
+  interactionDate: Date!
+  sellerName: String!
+  notes: String!
+  nextAction: String!
+  status: String!
+  dueDate: Date!
+  campaignName: String
+}
+
+input ProspectConversionInput {
+  name: String!
+  valueMillions: Decimal!
+  stage: String!
+  ownerName: String!
+  closeDate: Date!
+  solutionName: String
+  probabilityPercent: Int
+}
+
+type Opportunity implements Node {
+  id: ID!
+  name: String!
+  accountName: String!
+  businessUnitCode: String!
+  countryName: String
+  industry: String!
+  valueMillions: Decimal!
+  stage: String!
+  ownerName: String!
+  closeDate: Date!
+  status: OpportunityStatus!
+  mmFactory: Boolean!
+  solution: Solution
+  probabilityPercent: Int!
+  competitor: String
+  prospect: Prospect
+}
+
+enum OpportunityStatus { OPEN WON LOST }
+input OpportunityFilter { businessUnitCode: String countryName: String status: OpportunityStatus mmFactory: Boolean }
+type OpportunityConnection { nodes: [Opportunity!]! pageInfo: PageInfo! }
+
+type Solution {
+  name: String!
+  solutionClass: String!
+  tags: [String!]!
+  maturity: String!
+  certificationStatus: String!
+  reuseCount: Int!
+  assets: [Asset!]!
+}
+
+type SolutionConnection { nodes: [Solution!]! pageInfo: PageInfo! }
+input SolutionFilter { solutionClass: String maturity: String certificationStatus: String }
+
+enum AssetSourceType { UPLOADED_FILE REPOSITORY_LINK EXTERNAL_LINK }
+enum AssetLifecycleState { DRAFT SUBMITTED CERTIFIED IN_REFRESH RE_CERTIFIED RETIRED }
+
+type Asset implements Node {
+  id: ID!
+  name: String!
+  assetType: String!
+  version: String!
+  solutionName: String!
+  carveOutReady: Boolean!
+  sourceType: AssetSourceType!
+  repositoryName: String
+  sourceUrl: String
+  ownerName: String!
+  refreshCycleMonths: Int!
+  lastReviewedAt: Date
+  nextReviewAt: Date
+  lifecycleState: AssetLifecycleState!
+  visibilityScopes: [String!]!
+}
+
+input AssetLinkInput {
+  name: String!
+  assetType: String!
+  version: String!
+  sourceType: AssetSourceType!
+  repositoryName: String
+  sourceUrl: String!
+  ownerName: String!
+  refreshCycleMonths: Int!
+  carveOutReady: Boolean = false
+  visibilityScopes: [String!] = []
+}
+
+input AssetUpdateInput {
+  name: String
+  assetType: String
+  repositoryName: String
+  sourceUrl: String
+  ownerName: String
+  refreshCycleMonths: Int
+  carveOutReady: Boolean
+  visibilityScopes: [String!]
+}
+
+input AssetLifecycleCommand {
+  state: AssetLifecycleState!
+  changedBy: String!
+  reason: String
+  newVersion: String
+  nextReviewAt: Date
+}
+
+input AssetMaintenanceFilter { dueBefore: Date ownerName: String }
+type AssetConnection { nodes: [Asset!]! pageInfo: PageInfo! }
+
+enum CampaignStatus { DRAFT PLANNED APPROVED ACTIVE PAUSED CLOSED REVIEW }
+
+type Campaign {
+  name: String!
+  businessUnitCode: String!
+  countryName: String
+  status: CampaignStatus!
+  solution: Solution!
+  ownerName: String!
+  approverName: String!
+  startDate: Date!
+  endDate: Date!
+  businessLine: String
+  theme: String
+  description: String
+  signalDriven: Boolean!
+  metrics: CampaignMetrics!
+  partnerPlays: [PartnerPlay!]!
+}
+
+type CampaignMetrics {
+  targetAccountCount: Int!
+  accountsReached: Int!
+  meetingsBooked: Int!
+  meetingCount: Int!
+  qualifiedLeads: Int!
+  pipelineMillions: Decimal!
+  bookingsMillions: Decimal!
+  revenueWonMillions: Decimal!
+}
+
+input CampaignFilter { businessUnitCode: String countryName: String status: CampaignStatus solutionName: String }
+type CampaignConnection { nodes: [Campaign!]! pageInfo: PageInfo! }
+
+input CampaignCreateInput {
+  name: String!
+  businessUnitCode: String!
+  countryName: String
+  status: CampaignStatus!
+  solutionName: String!
+  radarEngineName: String
+  ownerName: String!
+  approverName: String!
+  startDate: Date!
+  endDate: Date!
+  businessLine: String
+  theme: String
+  partnerPlayNames: [String!] = []
+  campaignDescription: String
+  signalDriven: Boolean = false
+}
+
+input CampaignUpdateInput {
+  businessUnitCode: String!
+  countryName: String
+  solutionName: String!
+  radarEngineName: String
+  ownerName: String!
+  approverName: String!
+  startDate: Date!
+  endDate: Date!
+  businessLine: String
+  theme: String
+  campaignDescription: String
+  signalDriven: Boolean!
+}
+
+input CampaignStatusCommand { status: CampaignStatus! changedBy: String! changeDescription: String }
+
+enum PartnerPlayStatus { DRAFT ACTIVE PAUSED CLOSED }
+type PartnerPlay {
+  name: String!
+  partnerName: String!
+  partnerTier: String!
+  businessLine: String!
+  theme: String!
+  eligibleCountryCodes: [String!]!
+  status: PartnerPlayStatus!
+  valueProposition: String!
+  influencedPipelineMillions: Decimal!
+  linkedCampaignCount: Int!
+  ownerName: String!
+}
+input PartnerPlayInput {
+  name: String!
+  partnerName: String!
+  partnerTier: String!
+  businessLine: String!
+  theme: String!
+  eligibleCountryCodes: [String!]!
+  status: PartnerPlayStatus!
+  valueProposition: String!
+  ownerName: String!
+}
+
+enum RadarProspectSet { TARGET_PROSPECTS ACTIVE_CAMPAIGN_ACCOUNTS QUALIFIED_LEADS FULL_MID_MARKET_MASTER CUSTOM_UPLOAD }
+type RadarEngine {
+  name: String!
+  businessUnitCode: String!
+  prospectSet: RadarProspectSet!
+  sourceKeys: [String!]!
+  frequency: String!
+  runAt: String!
+  lookbackDays: Int!
+  minimumScore: Int!
+  autoLinkCampaigns: Boolean!
+  clientCount: Int!
+  signalCount: Int!
+}
+input RadarEngineInput {
+  name: String!
+  businessUnitCode: String!
+  prospectSet: RadarProspectSet!
+  sourceKeys: [String!]!
+  frequency: String!
+  runAt: String!
+  lookbackDays: Int!
+  minimumScore: Int!
+  autoLinkCampaigns: Boolean = true
+}
+type RadarRun { id: ID! engineName: String! status: String! requestedAt: DateTime! }
+enum Severity { LOW MEDIUM HIGH CRITICAL }
+enum SignalStatus { NEW REVIEWED DISMISSED }
+type RadarSignal implements Node {
+  id: ID!
+  businessUnitCode: String!
+  countryName: String
+  accountName: String!
+  radarEngineName: String!
+  title: String!
+  source: String!
+  score: Int!
+  severity: Severity!
+  status: SignalStatus!
+  summary: String!
+  signalCategory: String
+  publishedAt: Date
+  opportunityHypothesis: String
+  recommendedAgents: [Agent!]!
+  recommendedAction: String
+  scoringInputs: JSON!
+}
+input RadarSignalFilter { businessUnitCode: String countryName: String status: SignalStatus severity: Severity category: String query: String }
+type RadarSignalConnection { nodes: [RadarSignal!]! pageInfo: PageInfo! }
+
+enum AgentType { INTERNAL EXTERNAL }
+enum AgentStatus { PUBLISHED IN_TEST DRAFT RETIRED }
+type Agent {
+  name: String!
+  lifecycleStage: String!
+  agentType: AgentType!
+  status: AgentStatus!
+  version: String!
+  description: String!
+  groundingSources: [String!]!
+  ownerTeam: String!
+  bestUsedFor: String!
+  launchesThisQuarter: Int!
+  platform: String!
+  launchUrl: String!
+  visibilityScopes: [String!]!
+  recommendedTriggerCategories: [String!]!
+}
+input AgentFilter { status: AgentStatus agentType: AgentType lifecycleStage: String ownerTeam: String query: String }
+input AgentInput {
+  name: String!
+  lifecycleStage: String!
+  agentType: AgentType!
+  status: AgentStatus!
+  version: String!
+  description: String!
+  groundingSources: [String!] = []
+  ownerTeam: String!
+  bestUsedFor: String!
+  platform: String!
+  launchUrl: String!
+  visibilityScopes: [String!] = []
+  recommendedTriggerCategories: [String!] = []
+}
+input AgentLaunchInput { accountName: String prospectId: ID opportunityId: ID signalId: ID campaignName: String }
+type AgentLaunch { launchUrl: String! recordedAt: DateTime! }
+
+type KpiSnapshot {
+  asOf: DateTime!
+  businessUnitCode: String!
+  countryName: String
+  pipelineMillions: Decimal!
+  revenueMillions: Decimal!
+  coveragePercent: Decimal!
+  reusePercent: Decimal!
+  signalCount: Int!
+  meetingCount: Int!
+  qualifiedLeadCount: Int!
+  activeCampaignCount: Int!
+  activePartnerPlayCount: Int!
+  keyAssetCount: Int!
+  smartAgentCount: Int!
+}

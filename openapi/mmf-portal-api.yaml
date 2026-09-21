@@ -6,9 +6,22 @@ info:
     solutions & assets, triggers radar, Smart Agents, governance, KPIs and
     administration. Backed by Spring Boot 4 and PostgreSQL; resources map to
     the tables defined in database/schema.sql.
-  version: "1.0.0"
+  version: "1.1.0"
+externalDocs:
+  description: GraphQL schema and domain architecture
+  url: ../graphql/schema.graphqls
 servers:
   - url: /api/v1
+
+x-bounded-contexts:
+  identity-access: [Auth, Scope, Business Units, Roles & Permissions]
+  pipeline: [Accounts, Prospects, Prospect Uploads, Opportunities]
+  go-to-market: [Campaigns, Partner Plays]
+  solution-catalog: [Solutions & Assets]
+  opportunity-sensing: [Triggers Radar]
+  agent-catalog: [Smart Agents]
+  governance: [Governance, Admin]
+  analytics: [Dashboard & KPIs]
 
 security:
   - bearerAuth: []
@@ -23,6 +36,7 @@ tags:
   - name: Prospect Uploads
   - name: Solutions & Assets
   - name: Campaigns
+  - name: Partner Plays
   - name: Opportunities
   - name: Triggers Radar
   - name: Smart Agents
@@ -316,7 +330,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/ProspectInput" }
+            schema: { $ref: "#/components/schemas/ProspectCreateInput" }
       responses:
         "201":
           description: Created
@@ -340,12 +354,13 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
     put:
       tags: [Prospects]
-      summary: Update a prospect
+      summary: Update the editable fields of an unconverted prospect
+      description: Prospect identity, account, scope and source are immutable. Converted prospects are read-only.
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/ProspectInput" }
+            schema: { $ref: "#/components/schemas/ProspectUpdateInput" }
       responses:
         "200":
           description: Updated
@@ -353,6 +368,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Prospect" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
     delete:
       tags: [Prospects]
       summary: Delete a prospect
@@ -640,18 +656,46 @@ paths:
                 items: { $ref: "#/components/schemas/Asset" }
     post:
       tags: [Solutions & Assets]
-      summary: Add an asset to a solution
+      summary: Register a repository or external asset link for a solution
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/AssetInput" }
+            schema: { $ref: "#/components/schemas/AssetLinkInput" }
       responses:
         "201":
           description: Created
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Asset" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /solutions/{name}/asset-uploads:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Solutions & Assets]
+      summary: Upload an asset file and submit it for certification
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, metadata]
+              properties:
+                file: { type: string, format: binary }
+                metadata: { $ref: "#/components/schemas/AssetUploadMetadata" }
+      responses:
+        "201":
+          description: Asset uploaded and registered
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
 
   /solutions/{name}/play-templates:
@@ -710,7 +754,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/AssetInput" }
+            schema: { $ref: "#/components/schemas/AssetUpdateInput" }
       responses:
         "200":
           description: Updated
@@ -724,6 +768,49 @@ paths:
       responses:
         "204": { description: Deleted }
         "404": { $ref: "#/components/responses/NotFound" }
+
+  /assets/{id}/lifecycle:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+    patch:
+      tags: [Solutions & Assets]
+      summary: Transition an asset through certification, refresh or retirement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AssetLifecycleCommand" }
+      responses:
+        "200":
+          description: Updated asset
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Asset" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /assets/maintenance:
+    get:
+      tags: [Solutions & Assets]
+      summary: List assets due for review or currently in refresh
+      parameters:
+        - name: dueBefore
+          in: query
+          schema: { type: string, format: date }
+        - name: ownerName
+          in: query
+          schema: { type: string }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Paged maintenance queue
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetPage" }
 
   # ------------------------------------------------------------ Campaigns
   /campaigns:
@@ -754,7 +841,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CampaignInput" }
+            schema: { $ref: "#/components/schemas/CampaignCreateInput" }
       responses:
         "201":
           description: Created
@@ -796,7 +883,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/CampaignInput" }
+            schema: { $ref: "#/components/schemas/CampaignUpdateInput" }
       responses:
         "200":
           description: Updated
@@ -881,6 +968,99 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/CampaignHistoryEntry" }
+
+  # ---------------------------------------------------------- Partner Plays
+  /partner-plays:
+    get:
+      tags: [Partner Plays]
+      summary: List partner plays available to the current scope
+      parameters:
+        - $ref: "#/components/parameters/CountryFilter"
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/PartnerPlayStatus" }
+      responses:
+        "200":
+          description: Partner plays
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PartnerPlay" }
+    post:
+      tags: [Partner Plays]
+      summary: Create a partner play
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerPlayInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPlay" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /partner-plays/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Partner Plays]
+      summary: Get a partner play by name
+      responses:
+        "200":
+          description: Partner play
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPlay" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Partner Plays]
+      summary: Update a partner play
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerPlayInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPlay" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Partner Plays]
+      summary: Retire a partner play
+      responses:
+        "204": { description: Retired }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /campaigns/{name}/partner-plays/{partnerPlayName}:
+    parameters:
+      - $ref: "#/components/parameters/CampaignName"
+      - name: partnerPlayName
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      tags: [Campaigns, Partner Plays]
+      summary: Link a partner play to a campaign
+      responses:
+        "204": { description: Linked }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+    delete:
+      tags: [Campaigns, Partner Plays]
+      summary: Unlink a partner play from a campaign
+      responses:
+        "204": { description: Unlinked }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   # --------------------------------------------------------- Opportunities
   /opportunities:
@@ -1026,6 +1206,24 @@ paths:
       responses:
         "204": { description: Deleted }
         "404": { $ref: "#/components/responses/NotFound" }
+
+  /radar/engines/{name}/runs:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Triggers Radar]
+      summary: Start an ad-hoc radar collection run
+      responses:
+        "202":
+          description: Run accepted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RadarRun" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
 
   /radar/signals:
     get:
@@ -1190,6 +1388,27 @@ paths:
               schema:
                 type: array
                 items: { $ref: "#/components/schemas/AgentUsageMetric" }
+
+  /agents/{name}/launches:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Smart Agents]
+      summary: Record a portal launch and return the external agent destination
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgentLaunchInput" }
+      responses:
+        "200":
+          description: Launch destination
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AgentLaunch" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   # ---------------------------------------------------------- Governance
   /governance/councils:
@@ -1832,9 +2051,31 @@ components:
         source: { $ref: "#/components/schemas/ProspectSource" }
         uploadBatchId: { type: string, nullable: true }
         qualificationStatus: { type: string }
-    ProspectInput:
-      allOf:
-        - $ref: "#/components/schemas/Prospect"
+    ProspectCreateInput:
+      type: object
+      required: [accountName, businessUnitCode, industry, estimatedTcvMillions, lifecycleStage, ownerName, expectedSigningQuarter, source]
+      properties:
+        accountName: { type: string }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        industry: { type: string }
+        estimatedTcvMillions: { type: number, format: double, minimum: 0 }
+        lifecycleStage: { $ref: "#/components/schemas/LifecycleStage" }
+        ownerName: { type: string }
+        expectedSigningQuarter: { type: string, pattern: '^Q[1-4]-[0-9]{4}$' }
+        source: { $ref: "#/components/schemas/ProspectSource" }
+        uploadBatchId: { type: string, nullable: true }
+        qualificationStatus: { type: string, nullable: true }
+    ProspectUpdateInput:
+      type: object
+      required: [industry, estimatedTcvMillions, lifecycleStage, ownerName, expectedSigningQuarter]
+      properties:
+        industry: { type: string }
+        estimatedTcvMillions: { type: number, format: double, minimum: 0 }
+        lifecycleStage: { $ref: "#/components/schemas/LifecycleStage" }
+        ownerName: { type: string }
+        expectedSigningQuarter: { type: string, pattern: '^Q[1-4]-[0-9]{4}$' }
+        qualificationStatus: { type: string, nullable: true }
     ProspectPage:
       allOf:
         - $ref: "#/components/schemas/PageEnvelope"
@@ -1952,9 +2193,82 @@ components:
         certificationStatus: { $ref: "#/components/schemas/CertificationStatus" }
         solutionName: { type: string }
         carveOutReady: { type: boolean }
-    AssetInput:
+        sourceType: { $ref: "#/components/schemas/AssetSourceType" }
+        repositoryName: { type: string, nullable: true }
+        sourceUrl: { type: string, format: uri, nullable: true }
+        ownerName: { type: string }
+        refreshCycleMonths: { type: integer, minimum: 1 }
+        lastReviewedAt: { type: string, format: date, nullable: true }
+        nextReviewAt: { type: string, format: date, nullable: true }
+        lifecycleState: { $ref: "#/components/schemas/AssetLifecycleState" }
+        visibilityScopes:
+          type: array
+          items: { type: string }
+    AssetSourceType:
+      type: string
+      enum: [Uploaded file, Repository link, External link]
+    AssetLifecycleState:
+      type: string
+      enum: [Draft, Submitted, Certified, In refresh, Re-certified, Retired]
+    AssetLinkInput:
+      type: object
+      required: [name, assetType, version, sourceType, sourceUrl, ownerName, refreshCycleMonths]
+      properties:
+        name: { type: string }
+        assetType: { type: string }
+        version: { type: string }
+        sourceType: { $ref: "#/components/schemas/AssetSourceType" }
+        repositoryName: { type: string, nullable: true }
+        sourceUrl: { type: string, format: uri }
+        ownerName: { type: string }
+        refreshCycleMonths: { type: integer, minimum: 1 }
+        carveOutReady: { type: boolean, default: false }
+        visibilityScopes:
+          type: array
+          items: { type: string }
+    AssetUploadMetadata:
+      type: object
+      required: [name, assetType, version, ownerName, refreshCycleMonths]
+      properties:
+        name: { type: string }
+        assetType: { type: string }
+        version: { type: string }
+        ownerName: { type: string }
+        refreshCycleMonths: { type: integer, minimum: 1 }
+        carveOutReady: { type: boolean, default: false }
+        visibilityScopes:
+          type: array
+          items: { type: string }
+    AssetUpdateInput:
+      type: object
+      properties:
+        name: { type: string }
+        assetType: { type: string }
+        repositoryName: { type: string, nullable: true }
+        sourceUrl: { type: string, format: uri, nullable: true }
+        ownerName: { type: string }
+        refreshCycleMonths: { type: integer, minimum: 1 }
+        carveOutReady: { type: boolean }
+        visibilityScopes:
+          type: array
+          items: { type: string }
+    AssetLifecycleCommand:
+      type: object
+      required: [state, changedBy]
+      properties:
+        state: { $ref: "#/components/schemas/AssetLifecycleState" }
+        changedBy: { type: string }
+        reason: { type: string, nullable: true }
+        newVersion: { type: string, nullable: true }
+        nextReviewAt: { type: string, format: date, nullable: true }
+    AssetPage:
       allOf:
-        - $ref: "#/components/schemas/Asset"
+        - $ref: "#/components/schemas/PageEnvelope"
+        - type: object
+          properties:
+            content:
+              type: array
+              items: { $ref: "#/components/schemas/Asset" }
 
     PlayTemplate:
       type: object
@@ -2008,9 +2322,43 @@ components:
         campaignDescription: { type: string, nullable: true }
         metrics: { $ref: "#/components/schemas/CampaignMetrics" }
         signalDriven: { type: boolean }
-    CampaignInput:
-      allOf:
-        - $ref: "#/components/schemas/Campaign"
+    CampaignCreateInput:
+      type: object
+      required: [name, businessUnitCode, status, solutionName, ownerName, approverName, startDate, endDate]
+      properties:
+        name: { type: string }
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/CampaignStatus" }
+        solutionName: { type: string }
+        radarEngineName: { type: string, nullable: true }
+        ownerName: { type: string }
+        approverName: { type: string }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        businessLine: { type: string, nullable: true }
+        theme: { type: string, nullable: true }
+        partnerPlayNames:
+          type: array
+          items: { type: string }
+        campaignDescription: { type: string, nullable: true, maxLength: 500 }
+        signalDriven: { type: boolean, default: false }
+    CampaignUpdateInput:
+      type: object
+      required: [businessUnitCode, solutionName, ownerName, approverName, startDate, endDate]
+      properties:
+        businessUnitCode: { type: string }
+        countryName: { type: string, nullable: true }
+        solutionName: { type: string }
+        radarEngineName: { type: string, nullable: true }
+        ownerName: { type: string }
+        approverName: { type: string }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        businessLine: { type: string, nullable: true }
+        theme: { type: string, nullable: true }
+        campaignDescription: { type: string, nullable: true, maxLength: 500 }
+        signalDriven: { type: boolean }
     CampaignPage:
       allOf:
         - $ref: "#/components/schemas/PageEnvelope"
@@ -2051,6 +2399,42 @@ components:
         changedAt: { type: string, format: date-time }
         changedBy: { type: string }
         changeDescription: { type: string }
+
+    PartnerPlayStatus:
+      type: string
+      enum: [Draft, Active, Paused, Closed]
+    PartnerPlay:
+      type: object
+      properties:
+        name: { type: string }
+        partnerName: { type: string }
+        partnerTier: { type: string }
+        businessLine: { type: string }
+        theme: { type: string }
+        eligibleCountryCodes:
+          type: array
+          items: { type: string }
+        status: { $ref: "#/components/schemas/PartnerPlayStatus" }
+        valueProposition: { type: string }
+        influencedPipelineMillions: { type: number, format: double }
+        linkedCampaignCount: { type: integer }
+        ownerName: { type: string }
+    PartnerPlayInput:
+      type: object
+      required: [name, partnerName, partnerTier, businessLine, theme, eligibleCountryCodes, status, valueProposition, ownerName]
+      properties:
+        name: { type: string }
+        partnerName: { type: string }
+        partnerTier: { type: string }
+        businessLine: { type: string }
+        theme: { type: string }
+        eligibleCountryCodes:
+          type: array
+          minItems: 1
+          items: { type: string }
+        status: { $ref: "#/components/schemas/PartnerPlayStatus" }
+        valueProposition: { type: string }
+        ownerName: { type: string }
 
     OpportunityStatus:
       type: string
@@ -2096,9 +2480,41 @@ components:
         ruleCount: { type: integer }
         schedule: { type: string }
         signalCount: { type: integer }
+        prospectSet: { $ref: "#/components/schemas/RadarProspectSet" }
+        sourceKeys:
+          type: array
+          items: { type: string }
+        frequency: { type: string }
+        runAt: { type: string, example: "05:00 CET" }
+        lookbackDays: { type: integer, minimum: 1 }
+        minimumScore: { type: integer, minimum: 0, maximum: 100 }
+        autoLinkCampaigns: { type: boolean }
+    RadarProspectSet:
+      type: string
+      enum: [Target prospects, Active campaign accounts, Qualified leads, Full mid-market master, Custom upload]
     RadarEngineInput:
-      allOf:
-        - $ref: "#/components/schemas/RadarEngine"
+      type: object
+      required: [name, businessUnitCode, prospectSet, sourceKeys, frequency, runAt, lookbackDays, minimumScore]
+      properties:
+        name: { type: string }
+        businessUnitCode: { type: string }
+        prospectSet: { $ref: "#/components/schemas/RadarProspectSet" }
+        sourceKeys:
+          type: array
+          minItems: 1
+          items: { type: string }
+        frequency: { type: string }
+        runAt: { type: string, example: "05:00 CET" }
+        lookbackDays: { type: integer, minimum: 1 }
+        minimumScore: { type: integer, minimum: 0, maximum: 100 }
+        autoLinkCampaigns: { type: boolean, default: true }
+    RadarRun:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        engineName: { type: string }
+        status: { type: string, enum: [Accepted, Running, Completed, Failed] }
+        requestedAt: { type: string, format: date-time }
 
     Severity:
       type: string
@@ -2162,9 +2578,50 @@ components:
         ownerTeam: { type: string, nullable: true }
         bestUsedFor: { type: string, nullable: true }
         launchesThisQuarter: { type: integer }
+        platform: { type: string, nullable: true }
+        launchUrl: { type: string, format: uri, nullable: true }
+        visibilityScopes:
+          type: array
+          items: { type: string }
+        recommendedTriggerCategories:
+          type: array
+          items: { type: string }
     AgentInput:
-      allOf:
-        - $ref: "#/components/schemas/Agent"
+      type: object
+      required: [name, lifecycleStage, agentType, status, version, description, ownerTeam, bestUsedFor, platform, launchUrl]
+      properties:
+        name: { type: string }
+        lifecycleStage: { type: string }
+        agentType: { $ref: "#/components/schemas/AgentType" }
+        status: { $ref: "#/components/schemas/AgentStatus" }
+        version: { type: string }
+        description: { type: string }
+        groundingSources:
+          type: array
+          items: { type: string }
+        ownerTeam: { type: string }
+        bestUsedFor: { type: string }
+        platform: { type: string }
+        launchUrl: { type: string, format: uri }
+        visibilityScopes:
+          type: array
+          items: { type: string }
+        recommendedTriggerCategories:
+          type: array
+          items: { type: string }
+    AgentLaunchInput:
+      type: object
+      properties:
+        accountName: { type: string, nullable: true }
+        prospectId: { type: string, nullable: true }
+        opportunityId: { type: string, nullable: true }
+        signalId: { type: integer, format: int64, nullable: true }
+        campaignName: { type: string, nullable: true }
+    AgentLaunch:
+      type: object
+      properties:
+        launchUrl: { type: string, format: uri }
+        recordedAt: { type: string, format: date-time }
 
     AgentUsageMetric:
       type: object
@@ -2323,22 +2780,6 @@ components:
         qualifiedLeadCount: { type: integer }
         bookingsTargetMillions: { type: number, format: double }
 
-    PartnerPlay:
-      type: object
-      properties:
-        name: { type: string }
-        partnerName: { type: string }
-        partnerTier: { type: string }
-        businessLine: { type: string }
-        theme: { type: string }
-        eligibleCountryCodes:
-          type: array
-          items: { type: string, enum: [NL, DE, UK, SE, FI, NO, DK] }
-        status: { type: string, enum: [Draft, Active, Paused, Closed] }
-        valueProposition: { type: string }
-        influencedPipelineMillions: { type: number, format: double }
-        linkedCampaignCount: { type: integer }
-        ownerName: { type: string }
     KpiSnapshotPage:
       allOf:
         - $ref: "#/components/schemas/PageEnvelope"
