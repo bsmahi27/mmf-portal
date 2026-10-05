@@ -130,4 +130,50 @@ label.fl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.0
 @media (max-width:1150px){.kanban{grid-template-columns:repeat(4,1fr)}.f3{grid-template-columns:1fr 1fr}}
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);padding:20px}
 .login-card{width:380px;max-width:100%;box-shadow:0 12px 34px rgba(0,0,0,.28)}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 20px;
+}
+
+.partner-play-modal {
+  width: 95%;
+  max-width: 1400px;
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: #f5f6f8;
+  border-radius: 10px;
+  padding: 24px;
+
+  box-shadow: 0 10px 40px rgba(0,0,0,.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 24px;
+}
+
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}

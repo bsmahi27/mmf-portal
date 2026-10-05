@@ -1,10 +1,12 @@
 "use client";
-import React, { useState } from "react";
-import { ASSETS, PARTNER_PLAYS, SOLUTIONS } from "@/lib/data";
+import React, { useEffect, useState } from "react";
+import { ASSETS, SOLUTIONS } from "@/lib/data";
+import {listPartnerPlays, PartnerPlayDto, createPartnerPlay, PartnerPlayInput, PARTNER_PLAY_STATUSES ,deletePartnerPlay,updatePartnerPlay} from "@/api/partner-plays-api";
 import { useApp } from "@/lib/state";
 import { Badge, Chip, Tabs } from "@/components/ui";
 import { useDrawer } from "@/lib/drawer";
 import SolutionDrawer from "@/components/drawers/SolutionDrawer";
+import PartnerPlayDrawer from "@/components/drawers/PartnerPlayDrawer";
 
 const TABS = ["Assets by Business Line", "Solutions", "Partner Plays"];
 const certColor: Record<string, string> = { "Certified & Published": "green", "Submitted": "amber", "Draft": "gray" };
@@ -114,16 +116,490 @@ function AssetLibrary() {
 }
 
 function Plays() {
-  return (
-    <>
-      <div className="flex between wrapf mb"><span className="legend">{PARTNER_PLAYS.filter((p) => p.status === "Active").length} active partner plays · €{PARTNER_PLAYS.reduce((sum, p) => sum + p.pipe, 0).toFixed(1)}M influenced pipeline</span><button className="btn sm">+ New partner play</button></div>
-      <div className="cols">{PARTNER_PLAYS.map((play) => <div className="card" key={play.n}>
-        <div className="flex between mb"><Badge cls="amber">🤝 {play.p}</Badge><Badge cls={play.status === "Active" ? "green" : "gray"}>{play.status}</Badge></div>
-        <b>{play.n}</b><div className="legend mt6">{play.bl} · {play.tier} partner · {play.owner}</div>
-        <p style={{ fontSize: 12.2 }}>{play.vp}</p>
-        <div className="legend">{play.campaigns} campaigns · €{play.pipe.toFixed(1)}M influenced · {play.countries.join(", ")}</div>
-      </div>)}</div>
-      <div className="legend mt">Partner plays are packaged joint motions linked into campaigns; they are not copied into campaign records.</div>
-    </>
-  );
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const drawer = useDrawer();
+    const [isEditing, setIsEditing] = useState(false);
+    const [plays, setPlays] = useState<PartnerPlayDto[]>([]);
+    const [form, setForm] = useState<PartnerPlayDto>({
+        id:0,
+        name: "",
+        partnerName: "",
+        partnerTier: "",
+        businessLine: "",
+        theme: "",
+        eligibleCountryCodes: [],
+        status: "Draft",
+        valueProposition: "",
+        influencedPipelineMillions: 0,
+        linkedCampaignCount: 0,
+        ownerName: ""
+    });
+    const handleDeletePartnerPlay = async (
+        id: number | undefined,
+        e: React.MouseEvent
+    ) => {
+        e.stopPropagation();
+
+        if (!window.confirm("Delete this Partner Play?")) {
+            return;
+        }
+
+        try {
+            await deletePartnerPlay(id);
+
+            setPlays((prev) =>
+                prev.filter((play) => String(play.id) !== String(id))
+            );
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete Partner Play");
+        }
+    };
+
+    const resetForm = () => {
+        setForm({
+            id: 0,
+            name: "",
+            partnerName: "",
+            partnerTier: "",
+            businessLine: "",
+            theme: "",
+            eligibleCountryCodes: [],
+            status: "Draft",
+            valueProposition: "",
+            influencedPipelineMillions: 0,
+            linkedCampaignCount: 0,
+            ownerName: ""
+        });
+
+        setIsEditing(false);
+    };
+
+    const handleSave = async () => {
+        try {
+            if (
+                !form.name ||
+                !form.partnerName ||
+                !form.businessLine
+            ) {
+                alert("Please fill required fields");
+                return;
+            }
+
+            if (isEditing) {
+                await updatePartnerPlay(form.id, form);
+            } else {
+                await createPartnerPlay(form);
+            }
+
+            const data = await listPartnerPlays();
+            setPlays(data);
+
+            resetForm();
+
+            setShowCreateModal(false);
+            setIsEditing(false);
+        } catch (err) {
+            console.error(err);
+
+            alert(
+                isEditing
+                    ? "Failed to update partner play"
+                    : "Failed to save partner play"
+            );
+        }
+    };
+
+    const handleEdit = (play: PartnerPlayDto, e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        setForm({
+            ...play
+        });
+
+        setIsEditing(true);
+        setShowCreateModal(true);
+    };
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        async function loadData() {
+            try {
+                setLoading(true);
+                setError("");
+
+                const data = await listPartnerPlays();
+                console.log("Partner Plays Response", data);
+
+                setPlays(Array.isArray(data) ? data : []);
+            } catch (e: any) {
+                console.error(e);
+                setError(e?.message || "Failed to load partner plays");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadData();
+    }, []);
+    if (loading) {
+        return <div className="legend">Loading partner plays...</div>;
+    }
+
+    if (error) {
+        return (
+            <div className="card">
+                <div style={{ color: "red" }}>
+                    Failed to load partner plays
+                </div>
+                <div className="legend">
+                    {error}
+                </div>
+            </div>
+        );
+    }
+
+    {plays.length === 0 && (
+        <div className="legend">No partner plays found.</div>
+    )}
+
+    return (
+        <>
+            <div className="flex between wrapf mb">
+        <span className="legend">
+          {plays.filter((p) => p.status === "Active").length}
+            {" "}active partner plays · €
+            {plays
+                .reduce(
+                    (sum, p) => sum + (p.influencedPipelineMillions || 0),
+                    0
+                )
+                .toFixed(1)}
+            M influenced pipeline
+        </span>
+
+                <button
+                    className="btn sm"
+                    onClick={() => setShowCreateModal(true)}
+                >
+                    + New partner play
+                </button>
+            </div>
+
+            <div className="cols">
+                {plays.map((play) => (
+                    <div
+                        className="card"
+                        key={play.id}
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                            drawer.open(
+                                play.name,
+                                <span className="muted">
+                {play.partnerName} • {play.partnerTier}
+            </span>,
+                                <PartnerPlayDrawer play={play} />
+                            )
+                        }
+                    >
+                        <div className="flex between mb">
+                            <Badge cls="amber">
+                                🤝 {play.partnerName}
+                            </Badge>
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px"
+                                }}
+                            >
+                                <Badge
+                                    cls={
+                                        play.status === "Active"
+                                            ? "green"
+                                            : play.status === "Paused"
+                                                ? "amber"
+                                                : "gray"
+                                    }
+                                >
+                                    {play.status}
+                                </Badge>
+                                <button className="btn ghost sm" onClick={(e) => handleEdit(play, e)}>✎ Edit
+                                </button>
+
+                                <div
+                                    className="x"
+                                    title="Delete Partner Play"
+                                    onClick={(e) => {
+                                        console.log("Deleting play", play);
+                                        console.log("Deleting id", play.id);
+                                        handleDeletePartnerPlay(play.id, e);
+                                    }}
+                                    style={{
+                                        cursor: "pointer",
+                                        fontSize: "18px",
+                                        fontWeight: "bold",
+                                        lineHeight: 1
+                                    }}
+                                >
+                                    ×
+                                </div>
+                            </div>
+                        </div>
+
+                        <b>{play.name}</b>
+
+                        <div className="legend mt6">
+                            {play.businessLine} · {play.partnerTier} partner ·{" "}
+                            {play.ownerName}
+                        </div>
+
+                        <p style={{ fontSize: 12.2 }}>
+                            {play.valueProposition}
+                        </p>
+
+                        <div className="legend">
+                            {play.linkedCampaignCount} campaigns · €
+                            {play.influencedPipelineMillions?.toFixed(1)}M influenced ·{" "}
+                            {play.eligibleCountryCodes?.join(", ")}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="legend mt">
+                Partner plays are packaged joint motions linked into campaigns;
+                they are not copied into campaign records.
+            </div>
+            {showCreateModal && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => setShowCreateModal(false)}
+                >
+                    <div
+                        className="partner-play-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-header">
+                            <h2>
+                                {isEditing
+                                    ? "Edit Partner Play"
+                                    : "Create Partner Play"}
+                            </h2>
+
+                            <button
+                                className="close-btn"
+                                onClick={() => setShowCreateModal(false)}
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <p className="required-text">
+                            Fields marked with <span>*</span> are required
+                        </p>
+
+                        <div className="card">
+                            <h3>Partner Information</h3>
+
+                            <div className="f2">
+                                <div>
+                                    <label className="fl">Play Name *</label>
+                                    <input
+                                        className="t"
+                                        value={form.name}
+                                        onChange={(e) =>
+                                            setForm({ ...form, name: e.target.value })
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="fl">Partner Name *</label>
+                                    <input
+                                        className="t"
+                                        value={form.partnerName}
+                                        onChange={(e) =>
+                                            setForm({ ...form, partnerName: e.target.value })
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="fl">Partner Tier *</label>
+                                    <select
+                                        className="t"
+                                        value={form.partnerTier}
+                                        onChange={(e) =>
+                                            setForm({ ...form, partnerTier: e.target.value })
+                                        }
+                                    >
+                                        <option value="">Select</option>
+                                        <option value="Gold">Gold</option>
+                                        <option value="Silver">Silver</option>
+                                        <option value="Bronze">Bronze</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="card mt">
+                            <h3>Business Information</h3>
+
+                            <div className="f2">
+                                <div>
+                                    <label className="fl">Theme *</label>
+                                    <input
+                                        className="t"
+                                        value={form.theme}
+                                        onChange={(e) =>
+                                            setForm({ ...form, theme: e.target.value })
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="fl">Business Line *</label>
+                                    <input
+                                        className="t"
+                                        value={form.businessLine}
+                                        onChange={(e) =>
+                                            setForm({ ...form, businessLine: e.target.value })
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="fl">Owner Name *</label>
+                                    <input
+                                        className="t"
+                                        value={form.ownerName}
+                                        onChange={(e) =>
+                                            setForm({ ...form, ownerName: e.target.value })
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="fl">Status</label>
+                                    <select
+                                        className="t"
+                                        value={form.status}
+                                        onChange={(e) =>
+                                            setForm({
+                                                ...form,
+                                                status: e.target.value as PartnerPlayDto["status"],
+                                            })
+                                        }
+                                    >
+                                        {PARTNER_PLAY_STATUSES.map((s) => (
+                                            <option key={s}>{s}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="card mt">
+                            <h3>Coverage Information</h3>
+
+                            <label className="fl">Countries</label>
+
+                            <input
+                                className="t"
+                                placeholder="IN, DE, UK"
+                                value={form.eligibleCountryCodes.join(",")}
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        eligibleCountryCodes: e.target.value
+                                            .split(",")
+                                            .map((c) => c.trim())
+                                            .filter(Boolean),
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div className="card mt">
+                            <h3>Value Proposition</h3>
+
+                            <label className="fl">Description</label>
+
+                            <textarea
+                                className="t"
+                                rows={4}
+                                value={form.valueProposition}
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        valueProposition: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div className="card mt">
+                            <h3>Financial Information</h3>
+
+                            <div className="f2">
+                                <div>
+                                    <label className="fl">Pipeline (€M)</label>
+                                    <input
+                                        type="number"
+                                        className="t"
+                                        value={form.influencedPipelineMillions}
+                                        onChange={(e) =>
+                                            setForm({
+                                                ...form,
+                                                influencedPipelineMillions: Number(e.target.value),
+                                            })
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="fl">Campaign Count</label>
+                                    <input
+                                        type="number"
+                                        className="t"
+                                        value={form.linkedCampaignCount}
+                                        onChange={(e) =>
+                                            setForm({
+                                                ...form,
+                                                linkedCampaignCount: Number(e.target.value),
+                                            })
+                                        }
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt">
+                            <button className="btn" onClick={handleSave}>
+                                {isEditing
+                                    ? "Update Partner Play"
+                                    : "Save Partner Play"}
+                            </button>
+
+                            <button
+                                className="btn ghost"
+                                style={{ marginLeft: 8 }}
+                                onClick={() => {
+                                    setShowCreateModal(false);
+                                    resetForm();
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                        </div>
+                    </div>
+            )}
+        </>
+    );
 }
+
